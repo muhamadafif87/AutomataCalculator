@@ -1,180 +1,470 @@
 /**
- * VISUALIZER.JS - D3.js based automata visualization
+ * VISUALIZER.JS - Cytoscape based automata visualization
  */
 
-function drawAutomata(containerId, states, alphabet, startState, finalStates, transitions, activeState = null, highlightEdge = null) {
-  const container = document.getElementById(containerId);
-  if (!container) return;
-  container.innerHTML = '';
-  const W = container.clientWidth || 520;
-  const H = container.clientHeight || 300;
+const automataGraphs = {};
 
-  const svg = d3.select('#' + containerId).append('svg')
-    .attr('class', 'automata-svg')
-    .attr('viewBox', `0 0 ${W} ${H}`);
+function computeThompsonPositions(tree, width, height) {
+  const positions = {};
+  const nodeGapX = 118;
+  const branchGapY = 104;
+  const mergeGapX = 92;
+  const startX = 92;
+  const startY = Math.max(100, Math.min(height - 100, height / 2));
 
-  // Arrow markers
-  const defs = svg.append('defs');
-  ['norm', 'active'].forEach(t => {
-    defs.append('marker')
-      .attr('id', `arr-${t}-${containerId}`)
-      .attr('viewBox', '0 0 10 10').attr('refX', 9).attr('refY', 5)
-      .attr('markerWidth', 6).attr('markerHeight', 6).attr('orient', 'auto')
-      .append('path').attr('d', 'M0,2L8,5L0,8Z')
-      .attr('fill', t === 'active' ? '#16a34a' : '#9b9890');
-  });
+  function measure(fragment) {
+    if (!fragment) return { width: 0, height: 0 };
 
-  const n = states.length;
-  const nodeR = 20;
+    if (fragment.type === "char") {
+      return { width: nodeGapX, height: 0 };
+    }
 
-  // Layout
-  const pos = {};
-  const cx = W / 2, cy = H / 2;
-
-  const selfLoopClearance = 38;
-  const margin = nodeR + selfLoopClearance + 12;
-
-  if (n === 1) {
-    pos[states[0]] = { x: cx, y: cy };
-  } else if (n === 2) {
-    pos[states[0]] = { x: cx - W * 0.25, y: cy };
-    pos[states[1]] = { x: cx + W * 0.25, y: cy };
-  } else {
-    const availH = H - margin - nodeR - 8;
-    const availW = W - nodeR - 30;
-    const r = Math.min(availW / 2, availH / 2) * 0.85;
-    const yCenterOffset = selfLoopClearance * 0.3;
-    states.forEach((s, i) => {
-      const angle = (2 * Math.PI * i / n) - Math.PI / 2;
-      pos[s] = {
-        x: cx + r * Math.cos(angle),
-        y: (cy + yCenterOffset) + r * Math.sin(angle)
+    if (fragment.type === "concat") {
+      const left = measure(fragment.left);
+      const right = measure(fragment.right);
+      return {
+        width: left.width + mergeGapX + right.width,
+        height: Math.max(left.height, right.height),
       };
-    });
+    }
+
+    if (fragment.type === "union") {
+      return {
+        width:
+          nodeGapX +
+          24 +
+          Math.max(
+            measure(fragment.top).width,
+            measure(fragment.bottom).width,
+          ) +
+          mergeGapX +
+          12,
+        height:
+          branchGapY * 2 +
+          Math.max(
+            measure(fragment.top).height,
+            measure(fragment.bottom).height,
+          ),
+      };
+    }
+
+    if (fragment.type === "star" || fragment.type === "plus") {
+      return {
+        width: nodeGapX + 24 + measure(fragment.child).width + mergeGapX + 12,
+        height: measure(fragment.child).height,
+      };
+    }
+
+    return { width: 0, height: 0 };
   }
 
-  // Build edge map
+  function assign(fragment, x, y) {
+    if (!fragment) return { width: 0, height: 0 };
+
+    if (fragment.type === "char") {
+      positions[fragment.start] = { x, y };
+      positions[fragment.end] = { x: x + nodeGapX, y };
+      return { width: nodeGapX, height: 0 };
+    }
+
+    if (fragment.type === "concat") {
+      const left = measure(fragment.left);
+      const leftPlaced = assign(fragment.left, x, y);
+      const rightX = x + left.width + mergeGapX;
+      const rightPlaced = assign(fragment.right, rightX, y);
+      return {
+        width: leftPlaced.width + mergeGapX + rightPlaced.width,
+        height: Math.max(leftPlaced.height, rightPlaced.height),
+      };
+    }
+
+    if (fragment.type === "union") {
+      const topMeasure = measure(fragment.top);
+      const bottomMeasure = measure(fragment.bottom);
+      positions[fragment.start] = { x, y };
+      const childX = x + nodeGapX + 24;
+      const topY = y - branchGapY - Math.max(0, topMeasure.height / 2);
+      const bottomY = y + branchGapY + Math.max(0, bottomMeasure.height / 2);
+      const topPlaced = assign(fragment.top, childX, topY);
+      const bottomPlaced = assign(fragment.bottom, childX, bottomY);
+      const childWidth = Math.max(topPlaced.width, bottomPlaced.width);
+      positions[fragment.end] = { x: childX + childWidth + mergeGapX + 12, y };
+      return {
+        width: nodeGapX + 24 + childWidth + mergeGapX + 12,
+        height:
+          branchGapY * 2 + Math.max(topPlaced.height, bottomPlaced.height),
+      };
+    }
+
+    if (fragment.type === "star" || fragment.type === "plus") {
+      const childMeasure = measure(fragment.child);
+      positions[fragment.start] = { x, y };
+      const childX = x + nodeGapX + 24;
+      const childY = y;
+      const childPlaced = assign(fragment.child, childX, childY);
+      positions[fragment.end] = {
+        x: childX + childPlaced.width + mergeGapX + 12,
+        y,
+      };
+      return {
+        width: nodeGapX + 24 + childMeasure.width + mergeGapX + 12,
+        height: childPlaced.height,
+      };
+    }
+
+    return { width: 0, height: 0 };
+  }
+
+  const bounds = measure(tree);
+  assign(tree, startX, startY);
+  let minX = Infinity;
+  let minY = Infinity;
+  let maxX = -Infinity;
+  let maxY = -Infinity;
+
+  Object.values(positions).forEach((pos) => {
+    minX = Math.min(minX, pos.x);
+    minY = Math.min(minY, pos.y);
+    maxX = Math.max(maxX, pos.x);
+    maxY = Math.max(maxY, pos.y);
+  });
+
+  const padX = Math.max(28, 64 - minX);
+  const padY = Math.max(28, 64 - minY);
+  Object.keys(positions).forEach((key) => {
+    positions[key] = {
+      x: positions[key].x + padX,
+      y: positions[key].y + padY,
+    };
+  });
+
+  return {
+    positions,
+    width: Math.max(width, maxX - minX + padX * 2, bounds.width + padX * 2),
+    height: Math.max(height, maxY - minY + padY * 2, bounds.height + padY * 2),
+  };
+}
+
+if (typeof cytoscape !== "undefined") {
+  if (typeof cytoscapeDagre !== "undefined") {
+    cytoscape.use(cytoscapeDagre);
+  }
+  if (typeof cytoscapeElk !== "undefined") {
+    cytoscape.use(cytoscapeElk);
+  }
+}
+
+function drawAutomata(
+  containerId,
+  states,
+  alphabet,
+  startState,
+  finalStates,
+  transitions,
+  activeState = null,
+  highlightEdge = null,
+) {
+  const container = document.getElementById(containerId);
+  if (!container || !Array.isArray(states) || states.length === 0) return;
+
+  if (typeof cytoscape === "undefined") {
+    container.innerHTML =
+      '<div class="diagram-placeholder">Cytoscape belum termuat</div>';
+    return;
+  }
+
+  if (automataGraphs[containerId]) {
+    automataGraphs[containerId].destroy();
+  }
+
+  container.innerHTML = "";
+  const isNfaView = containerId === "diagram2-container";
+  const useThompsonPreset =
+    isNfaView && typeof nfaData !== "undefined" && nfaData.layoutTree;
+  const preset = useThompsonPreset
+    ? computeThompsonPositions(
+        nfaData.layoutTree,
+        container.clientWidth || 597,
+        container.clientHeight || 298,
+      )
+    : null;
+
+  const nodeSet = new Set(states);
+  const rootState = states.includes(startState) ? startState : states[0];
+
+  const elements = states.map((s) => ({
+    data: {
+      id: s,
+      label: s,
+      isFinal: finalStates.includes(s),
+      isActive: activeState === s,
+    },
+    classes: [
+      finalStates.includes(s) ? "node-final" : "",
+      activeState === s ? "node-active" : "",
+    ]
+      .filter(Boolean)
+      .join(" "),
+    ...(preset && preset.positions[s] ? { position: preset.positions[s] } : {}),
+  }));
+
+  // Build edge map to keep combined labels per pair.
   const edgeMap = {};
   Object.entries(transitions).forEach(([key, dest]) => {
-    const [from, sym] = key.split('|||');
-    if (!dest || dest === '∅') return;
+    const [from, sym] = key.split("|||");
+    if (!dest || dest === "∅") return;
+    if (!nodeSet.has(from)) return;
     const dests = Array.isArray(dest) ? dest : [dest];
-    dests.forEach(d => {
-      if (!states.includes(d) && !d) return;
-      const ek = from + '->' + d;
+    dests.forEach((d) => {
+      if (!d || !states.includes(d)) return;
+      const ek = from + "->" + d;
       if (!edgeMap[ek]) edgeMap[ek] = { from, to: d, labels: [] };
-      edgeMap[ek].labels.push(sym === 'ε' ? 'ε' : sym);
+      edgeMap[ek].labels.push(sym === "ε" ? "ε" : sym);
     });
   });
 
-  // Draw edges
-  Object.values(edgeMap).forEach(e => {
-    const isActive = highlightEdge && highlightEdge.from === e.from && highlightEdge.to === e.to;
-    const edgeColor = isActive ? '#16a34a' : '#c8c5ba';
-    const labelColor = isActive ? '#16a34a' : '#6b6860';
-    const marker = `url(#arr-${isActive ? 'active' : 'norm'}-${containerId})`;
-    const p1 = pos[e.from], p2 = pos[e.to];
-    if (!p1 || !p2) return;
-    const label = e.labels.join(',');
-
-    if (e.from === e.to) {
-      // Self-loop
-      const loopR = 14;
-      const x = p1.x, y = p1.y;
-      const startAngle = -Math.PI * 0.65;
-      const endAngle = -Math.PI * 0.35;
-      const ax = x + nodeR * Math.cos(startAngle);
-      const ay = y + nodeR * Math.sin(startAngle);
-      const bx = x + nodeR * Math.cos(endAngle);
-      const by = y + nodeR * Math.sin(endAngle);
-      const loopTopY = y - nodeR - selfLoopClearance + 6;
-      const clampedLoopTopY = Math.max(loopTopY, 10);
-
-      svg.append('path')
-        .attr('d', `M${ax},${ay} C${ax},${clampedLoopTopY} ${bx},${clampedLoopTopY} ${bx},${by}`)
-        .attr('fill', 'none')
-        .attr('stroke', edgeColor)
-        .attr('stroke-width', 1.5)
-        .attr('marker-end', marker);
-
-      svg.append('text')
-        .attr('x', x)
-        .attr('y', clampedLoopTopY - 6)
-        .attr('text-anchor', 'middle')
-        .attr('fill', labelColor)
-        .attr('font-size', 11)
-        .attr('font-family', 'IBM Plex Mono')
-        .text(label);
-
-    } else {
-      const revKey = e.to + '->' + e.from;
-      const hasBoth = edgeMap[revKey];
-      let dx = p2.x - p1.x, dy = p2.y - p1.y;
-      const dist = Math.sqrt(dx * dx + dy * dy) || 1;
-      dx /= dist; dy /= dist;
-      const startX = p1.x + dx * nodeR, startY = p1.y + dy * nodeR;
-      const endX = p2.x - dx * (nodeR + 7), endY = p2.y - dy * (nodeR + 7);
-
-      if (hasBoth) {
-        const perp = { x: -dy * 28, y: dx * 28 };
-        const mx = (startX + endX) / 2 + perp.x;
-        const my = (startY + endY) / 2 + perp.y;
-        svg.append('path')
-          .attr('d', `M${startX},${startY} Q${mx},${my} ${endX},${endY}`)
-          .attr('fill', 'none').attr('stroke', edgeColor).attr('stroke-width', 1.5)
-          .attr('marker-end', marker);
-        svg.append('text').attr('x', mx).attr('y', my - 5)
-          .attr('text-anchor', 'middle').attr('fill', labelColor)
-          .attr('font-size', 11).attr('font-family', 'IBM Plex Mono').text(label);
-      } else {
-        svg.append('line')
-          .attr('x1', startX).attr('y1', startY).attr('x2', endX).attr('y2', endY)
-          .attr('stroke', edgeColor).attr('stroke-width', 1.5)
-          .attr('marker-end', marker);
-        const lx = (startX + endX) / 2 - dy * 12;
-        const ly = (startY + endY) / 2 + dx * 12;
-        svg.append('text').attr('x', lx).attr('y', ly)
-          .attr('text-anchor', 'middle').attr('dominant-baseline', 'middle')
-          .attr('fill', labelColor).attr('font-size', 11).attr('font-family', 'IBM Plex Mono').text(label);
-      }
-    }
+  Object.values(edgeMap).forEach((e, i) => {
+    const isActive =
+      !!highlightEdge &&
+      highlightEdge.from === e.from &&
+      highlightEdge.to === e.to;
+    const edgeId = `${containerId}-e-${i}`;
+    elements.push({
+      data: {
+        id: edgeId,
+        source: e.from,
+        target: e.to,
+        label: e.labels.join(","),
+      },
+      classes: [
+        isActive ? "edge-active" : "",
+        e.from === e.to ? "edge-loop" : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+    });
   });
 
-  // Start arrow
-  if (pos[startState]) {
-    const sp = pos[startState];
-    svg.append('line')
-      .attr('x1', sp.x - nodeR - 22).attr('y1', sp.y)
-      .attr('x2', sp.x - nodeR - 2).attr('y2', sp.y)
-      .attr('stroke', '#16a34a').attr('stroke-width', 2)
-      .attr('marker-end', `url(#arr-active-${containerId})`);
+  if (rootState) {
+    const startMarkerId = `${containerId}-start-marker`;
+    elements.push({
+      data: { id: startMarkerId, label: "" },
+      classes: "start-marker",
+      ...(preset
+        ? {
+            position: {
+              x: (preset.positions[rootState]?.x || 72) - 56,
+              y: preset.positions[rootState]?.y || 0,
+            },
+          }
+        : {}),
+    });
+    elements.push({
+      data: {
+        id: `${containerId}-start-edge`,
+        source: startMarkerId,
+        target: rootState,
+        label: "",
+      },
+      classes: "start-edge",
+    });
   }
 
-  // Draw nodes
-  states.forEach(s => {
-    if (!pos[s]) return;
-    const { x, y } = pos[s];
-    const isFinal = finalStates.includes(s);
-    const isAct = activeState === s;
-
-    const g = svg.append('g');
-
-    g.append('circle').attr('cx', x).attr('cy', y).attr('r', nodeR)
-      .attr('fill', isAct ? '#f0fdf4' : isFinal ? '#eff6ff' : '#ffffff')
-      .attr('stroke', isAct ? '#16a34a' : isFinal ? '#2563eb' : '#c8c5ba')
-      .attr('stroke-width', isAct ? 2 : 1.5);
-
-    if (isFinal) {
-      g.append('circle').attr('cx', x).attr('cy', y).attr('r', nodeR - 5)
-        .attr('fill', 'none')
-        .attr('stroke', isAct ? '#16a34a' : '#2563eb')
-        .attr('stroke-width', 1);
-    }
-
-    g.append('text').attr('x', x).attr('y', y)
-      .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
-      .attr('fill', isAct ? '#16a34a' : isFinal ? '#1e40af' : '#1a1917')
-      .attr('font-size', s.length > 3 ? 9 : 11)
-      .attr('font-family', 'IBM Plex Mono').attr('font-weight', '500').text(s);
+  const cy = cytoscape({
+    container,
+    elements,
+    style: [
+      {
+        selector: "node",
+        style: {
+          width: isNfaView ? 40 : 42,
+          height: isNfaView ? 40 : 42,
+          label: "data(label)",
+          "background-color": "#ffffff",
+          "border-color": "#c8c5ba",
+          "border-width": 2,
+          color: "#1a1917",
+          "font-family": "IBM Plex Mono",
+          "font-size": 11,
+          "text-valign": "center",
+          "text-halign": "center",
+          "text-wrap": "ellipsis",
+          "text-max-width": 40,
+        },
+      },
+      {
+        selector: "node.node-final",
+        style: {
+          "background-color": "#eff6ff",
+          "border-color": "#2563eb",
+          "border-style": "double",
+          "border-width": 5,
+          color: "#1e40af",
+        },
+      },
+      {
+        selector: "node.node-active",
+        style: {
+          "background-color": "#f0fdf4",
+          "border-color": "#16a34a",
+          "border-width": 4,
+          color: "#16a34a",
+        },
+      },
+      {
+        selector: "node.start-marker",
+        style: {
+          width: 2,
+          height: 2,
+          label: "",
+          "background-opacity": 0,
+          "border-width": 0,
+          events: "no",
+        },
+      },
+      {
+        selector: "edge",
+        style: {
+          width: 1.6,
+          "line-color": "#c8c5ba",
+          "target-arrow-color": "#9b9890",
+          "target-arrow-shape": "triangle",
+          "curve-style": isNfaView ? "unbundled-bezier" : "bezier",
+          label: "data(label)",
+          color: "#6b6860",
+          "font-family": "IBM Plex Mono",
+          "font-size": 10,
+          "text-background-opacity": 1,
+          "text-background-color": "#f0efe9",
+          "text-background-padding": 2,
+          "text-margin-y": -8,
+          "text-rotation": "autorotate",
+        },
+      },
+      {
+        selector: "edge.edge-loop",
+        style: {
+          "loop-direction": "-45deg",
+          "loop-sweep": "70deg",
+        },
+      },
+      {
+        selector: "edge.edge-active",
+        style: {
+          "line-color": "#16a34a",
+          "target-arrow-color": "#16a34a",
+          color: "#16a34a",
+          width: 2.2,
+        },
+      },
+      {
+        selector: "edge.start-edge",
+        style: {
+          "line-color": "#16a34a",
+          "target-arrow-color": "#16a34a",
+          width: 2,
+          label: "",
+          "curve-style": "straight",
+          "source-endpoint": "outside-to-node",
+          "target-endpoint": "outside-to-node",
+        },
+      },
+    ],
+    userPanningEnabled: true,
+    userZoomingEnabled: true,
+    boxSelectionEnabled: false,
+    autoungrabify: true,
+    layout: preset
+      ? { name: "preset", fit: true, padding: 20, animate: false }
+      : undefined,
   });
+
+  const useElk =
+    !preset && states.length >= 18 && typeof cytoscapeElk !== "undefined";
+  const useDagre = !useElk && typeof cytoscapeDagre !== "undefined";
+
+  const layout = preset
+    ? null
+    : useElk
+      ? cy.layout({
+          name: "elk",
+          fit: true,
+          padding: 26,
+          elk: {
+            algorithm: "layered",
+            "elk.direction": "RIGHT",
+            "elk.spacing.nodeNode": "28",
+            "elk.layered.spacing.nodeNodeBetweenLayers": "40",
+            "elk.edgeRouting": "SPLINES",
+          },
+        })
+      : useDagre
+        ? cy.layout({
+            name: "dagre",
+            rankDir: "LR",
+            padding: isNfaView ? 30 : 24,
+            nodeSep: isNfaView ? 42 : 36,
+            edgeSep: isNfaView ? 26 : 20,
+            rankSep: isNfaView ? 66 : 52,
+            ranker: isNfaView ? "network-simplex" : "tight-tree",
+            align: isNfaView ? "UL" : undefined,
+            nodeDimensionsIncludeLabels: true,
+            fit: true,
+            animate: false,
+          })
+        : cy.layout({
+            name: "breadthfirst",
+            directed: true,
+            roots: rootState ? `#${rootState}` : undefined,
+            padding: 24,
+            spacingFactor: 1.15,
+            fit: true,
+            animate: false,
+          });
+
+  if (layout) layout.run();
+
+  if (isNfaView && !preset) {
+    cy.edges().forEach((edge) => {
+      const source = edge.source();
+      const target = edge.target();
+      if (!source.length || !target.length) return;
+      if (source.id() === target.id()) {
+        edge.style({
+          "loop-direction": "-70deg",
+          "loop-sweep": "75deg",
+        });
+      } else if (edge.data("label").includes(",")) {
+        edge.style({
+          "control-point-distances": 44,
+          "control-point-weights": 0.5,
+        });
+      } else {
+        edge.style({
+          "control-point-distances": 30,
+          "control-point-weights": 0.5,
+        });
+      }
+    });
+  }
+
+  if (rootState) {
+    const root = cy.getElementById(rootState);
+    const marker = cy.getElementById(`${containerId}-start-marker`);
+    if (root.length && marker.length) {
+      const p =
+        preset && preset.positions[rootState]
+          ? preset.positions[rootState]
+          : root.position();
+      marker.position({ x: p.x - 52, y: p.y });
+    }
+  }
+
+  cy.resize();
+  cy.fit(
+    cy.nodes().filter((n) => !n.hasClass("start-marker")),
+    24,
+  );
+
+  automataGraphs[containerId] = cy;
 }
