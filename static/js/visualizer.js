@@ -170,7 +170,12 @@ function drawAutomata(
   }
 
   if (automataGraphs[containerId]) {
-    automataGraphs[containerId].destroy();
+    const oldCy = automataGraphs[containerId];
+    const oldRo = oldCy.data("resizeObserver");
+    if (oldRo) {
+      oldRo.disconnect();
+    }
+    oldCy.destroy();
   }
 
   container.innerHTML = "";
@@ -289,17 +294,17 @@ function drawAutomata(
           width: 44,
           height: 44,
           label: "data(label)",
-          "background-color": "#0f172a",
-          "border-color": "#6366f1",
+          "background-color": "#ffffff",
+          "border-color": "#94a3b8",
           "border-width": 2.5,
-          color: "#f8fafc",
-          "font-family": "JetBrains Mono",
+          color: "#0f172a",
+          "font-family": "Plus Jakarta Sans",
           "font-size": 12,
           "font-weight": "bold",
           "text-valign": "center",
           "text-halign": "center",
-          "transition-property": "background-color, border-color, color, box-shadow, shadow-blur",
-          "transition-duration": "0.25s",
+          "transition-property": "background-color, border-color, color",
+          "transition-duration": "0.12s",
         },
       },
       {
@@ -307,30 +312,40 @@ function drawAutomata(
         style: {
           width: 46,
           height: 46,
-          "background-color": "#1e1b4b",
-          "border-color": "#a855f7",
+          "background-color": "#f8fafc",
+          "border-color": "#2563eb",
           "border-style": "double",
           "border-width": 5,
-          color: "#f3e8ff",
-          "shadow-blur": 8,
-          "shadow-color": "#a855f7",
-          "shadow-opacity": 0.5,
-          "shadow-offset-x": 0,
-          "shadow-offset-y": 0,
+          color: "#2563eb",
         },
       },
       {
         selector: "node.node-active",
         style: {
-          "background-color": "#022c22",
-          "border-color": "#10b981",
+          "background-color": "#dbeafe",
+          "border-color": "#2563eb",
           "border-width": 3.5,
-          color: "#34d399",
-          "shadow-blur": 16,
-          "shadow-color": "#10b981",
-          "shadow-opacity": 0.9,
-          "shadow-offset-x": 0,
-          "shadow-offset-y": 0,
+          color: "#1e3a8a",
+        },
+      },
+      {
+        selector: "node.node-hover",
+        style: {
+          "border-color": "#1e40af",
+          "background-color": "#f1f5f9",
+        },
+      },
+      {
+        selector: "node.node-final.node-hover",
+        style: {
+          "border-color": "#1d4ed8",
+        },
+      },
+      {
+        selector: "node.node-active.node-hover",
+        style: {
+          "background-color": "#bfdbfe",
+          "border-color": "#1d4ed8",
         },
       },
       {
@@ -348,22 +363,22 @@ function drawAutomata(
         selector: "edge",
         style: {
           width: 2.0,
-          "line-color": "#475569",
-          "target-arrow-color": "#475569",
+          "line-color": "#64748b",
+          "target-arrow-color": "#64748b",
           "target-arrow-shape": "triangle",
           "arrow-scale": 0.9,
           "curve-style": "bezier",
           label: "data(label)",
-          color: "#94a3b8",
-          "font-family": "JetBrains Mono",
+          color: "#475569",
+          "font-family": "Plus Jakarta Sans",
           "font-size": 11,
           "text-background-opacity": 1,
-          "text-background-color": "#090d16",
+          "text-background-color": "#ffffff",
           "text-background-padding": 3,
           "text-margin-y": -7,
           "text-rotation": "autorotate",
-          "transition-property": "line-color, target-arrow-color, width, shadow-blur",
-          "transition-duration": "0.25s",
+          "transition-property": "line-color, target-arrow-color, width",
+          "transition-duration": "0.12s",
         },
       },
       {
@@ -393,20 +408,17 @@ function drawAutomata(
       {
         selector: "edge.edge-active",
         style: {
-          "line-color": "#10b981",
-          "target-arrow-color": "#10b981",
-          color: "#10b981",
+          "line-color": "#2563eb",
+          "target-arrow-color": "#2563eb",
+          color: "#2563eb",
           width: 3.0,
-          "shadow-blur": 8,
-          "shadow-color": "#10b981",
-          "shadow-opacity": 0.6,
         },
       },
       {
         selector: "edge.start-edge",
         style: {
-          "line-color": "#6366f1",
-          "target-arrow-color": "#6366f1",
+          "line-color": "#2563eb",
+          "target-arrow-color": "#2563eb",
           width: 2.0,
           label: "",
           "curve-style": "straight",
@@ -484,9 +496,41 @@ function drawAutomata(
         }, 50);
       }
     }
+    // Cursor hints and hover highlights for dragging states and panning the canvas
+    cy.on('mouseover', 'node', (evt) => {
+      if (!evt.target.hasClass('start-marker')) {
+        container.style.cursor = 'grab';
+        evt.target.addClass('node-hover');
+      }
+    });
+    cy.on('mouseout', 'node', (evt) => {
+      container.style.cursor = 'grab';
+      evt.target.removeClass('node-hover');
+    });
+    cy.on('grab', 'node', (evt) => {
+      container.style.cursor = 'grabbing';
+      evt.target.removeClass('node-hover');
+    });
+    cy.on('free', 'node', () => {
+      container.style.cursor = 'grab';
+    });
   });
 
   cy.resize();
+  
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => {
+      cy.resize();
+      const validNodes = cy.nodes().filter(n => !n.hasClass('start-marker'));
+      if (validNodes.length > 0) {
+        cy.fit(validNodes, 35);
+        cy.center(validNodes);
+      }
+    });
+    ro.observe(container);
+    cy.data('resizeObserver', ro);
+  }
+  
   automataGraphs[containerId] = cy;
 }
 
