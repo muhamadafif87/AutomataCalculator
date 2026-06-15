@@ -1,8 +1,8 @@
 /**
- * APP.JS - UI logic and Flask API integration
+ * Logika antarmuka UI dan integrasi API Flask
  */
 
-// Global state variables
+// Status global automata
 let dfaData = { states: [], alpha: [], start: "", finals: [], trans: {} };
 let nfaData = { states: [], alpha: [], start: "", finals: [], trans: {} };
 let nfaLayoutTree = null;
@@ -12,7 +12,7 @@ let eqData = [
   { states: [], alpha: [], start: "", finals: [], trans: {} }
 ];
 
-// Helper: parse string lists separated by commas
+// Pengubah input teks ke array
 function parseList(str) {
   return str
     .split(",")
@@ -20,14 +20,14 @@ function parseList(str) {
     .filter(Boolean);
 }
 
-// Helper: switch active tab
+// Berpindah tab aktif
 function switchTab(name, el) {
   document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
   document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
   document.getElementById("tab-" + name).classList.add("active");
   el.classList.add("active");
   
-  // Trigger cy graph resizing because cytoscape needs a resize call when it becomes visible
+  // Sesuaikan ukuran grafik saat tab aktif
   setTimeout(() => {
     Object.keys(automataGraphs).forEach((key) => {
       if (automataGraphs[key]) {
@@ -38,7 +38,7 @@ function switchTab(name, el) {
   }, 100);
 }
 
-/* ==================== 1. DFA TESTER ==================== */
+// DFA
 
 function buildDFATable() {
   const states = parseList(document.getElementById("dfa-states").value);
@@ -93,7 +93,7 @@ function buildDFATable() {
   container.innerHTML = html;
   document.getElementById("dfa-trans-card").style.display = "block";
   
-  // Render initial diagram
+  // Gambar diagram awal
   setTimeout(() => renderDFAdiagram(), 50);
 }
 
@@ -159,15 +159,13 @@ async function testDFA() {
       <div style="font-size:11px; opacity:0.85">State Akhir: <span style="font-weight:600">${data.final_state}</span> ${accepted ? "(Final State)" : "(Bukan Final State)"}</div>
     </div>`;
 
-    // Process trace steps and add interactive hover
+    // Tampilkan langkah transisi dan efek hover
     let traceHtml = `<div class="step-trace">`;
     data.trace.forEach((step, idx) => {
-      // Find from state and symbol for highlighting
       let hoverAttrs = "";
       if (idx > 0 && data.trace[idx - 1].state && step.state && step.state !== "∅") {
         const from = data.trace[idx - 1].state;
         const to = step.state;
-        // Reconstruct symbol from step text: e.g. "δ(q0, 0) = q1"
         const matches = step.info.match(/δ\(([^,]+),\s*([^)]+)\)\s*=\s*(.+)/);
         if (matches && matches[2]) {
           const sym = matches[2].trim();
@@ -185,7 +183,7 @@ async function testDFA() {
     traceDiv.innerHTML = traceHtml;
     traceCard.style.display = "block";
 
-    // Highlight final active state in diagram
+    // Tandai state aktif terakhir pada diagram
     drawAutomata(
       "diagram-container",
       dfaData.states,
@@ -226,7 +224,7 @@ function clearDFATest() {
   renderDFAdiagram();
 }
 
-/* ==================== 2. REGEX → NFA ==================== */
+// REGEX KE NFA
 
 async function buildNFAFromRegex() {
   const regex = document.getElementById("regex-input").value.trim();
@@ -260,7 +258,7 @@ async function buildNFAFromRegex() {
 
     resultDiv.innerHTML = `<div class="result-box r-accept">✓ NFA Berhasil Dibangun: ${nfaData.states.length} states</div>`;
     
-    // Metadata info
+    // Metadata NFA
     infoDiv.innerHTML = `
       <p><b>Jumlah State:</b> ${nfaData.states.length} (${nfaData.states.join(", ")})</p>
       <p><b>State Awal:</b> <span style="color:var(--emerald); font-weight:bold">${nfaData.start}</span></p>
@@ -269,7 +267,7 @@ async function buildNFAFromRegex() {
     `;
     infoCard.style.display = "block";
 
-    // Draw graph
+    // Gambar diagram NFA
     drawAutomata(
       "diagram2-container",
       nfaData.states,
@@ -279,7 +277,7 @@ async function buildNFAFromRegex() {
       nfaData.trans
     );
 
-    // Build transition table
+    // Buat tabel transisi NFA
     buildNFATransTable(nfaData);
 
   } catch (err) {
@@ -363,22 +361,7 @@ async function testNFA() {
       <div style="font-size:11px; opacity:0.85">Himpunan State Akhir: { ${data.final_set.join(", ")} }</div>
     </div>`;
 
-    // Highlight final state set in the diagram
-    // For NFA, we can show active states on the final set
-    // Cytoscape will highlight all nodes in this set if we pass activeState as a list? 
-    // Wait, drawAutomata expects a single activeState. We can modify visualizer slightly, 
-    // or just pass one state. Let's pass the first accepted state, or customize visualizer 
-    // to check if activeState is an array.
-    // Yes! Let's check visualizer: `activeState === s`. If we pass an array, we can check 
-    // `Array.isArray(activeState) ? activeState.includes(s) : activeState === s`.
-    // Let's modify visualizer to support list of active states! It's already loaded, 
-    // let's check: in visualizer.js we wrote:
-    // `isActive: activeState === s` and `activeState === s ? "node-active" : ""`.
-    // Let's replace that snippet in visualizer.js later if needed, or we can just support 
-    // array checks. In fact, let's update visualizer.js to support array activeState so 
-    // we can highlight the entire set of final active NFA states! That would be extremely neat!
-    
-    // Highlight final active set
+    // Tandai set state aktif terakhir pada diagram
     drawAutomata(
       "diagram2-container",
       nfaData.states,
@@ -394,7 +377,7 @@ async function testNFA() {
   }
 }
 
-/* ==================== 3. MINIMIZER ==================== */
+// MINIMISASI DFA
 
 function buildMinTable() {
   const states = parseList(document.getElementById("min-states").value);
@@ -447,7 +430,7 @@ function buildMinTable() {
   
   document.getElementById("min-trans-card").style.display = "block";
   
-  // Render original DFA
+  // Gambar DFA awal
   setTimeout(() => {
     drawAutomata(
       "diagram3-container",
@@ -502,7 +485,7 @@ async function minimizeDFA() {
       <div style="font-size:11px; opacity:0.9">${mappingHtml}</div>
     </div>`;
 
-    // Draw original (update)
+    // Perbarui gambar DFA awal
     drawAutomata(
       "diagram3-container",
       minData.states,
@@ -512,7 +495,7 @@ async function minimizeDFA() {
       minData.trans
     );
 
-    // Draw minimized
+    // Gambar DFA hasil minimisasi
     drawAutomata(
       "diagram4-container",
       m.states,
@@ -527,7 +510,7 @@ async function minimizeDFA() {
   }
 }
 
-/* ==================== 4. EQUIVALENCE ==================== */
+// EKUIVALENSI DFA
 
 function buildEquivTable(idx) {
   const i = idx - 1;
@@ -643,7 +626,7 @@ async function checkEquivalence() {
       `;
     }
 
-    // Render diagrams for comparison
+    // Gambar diagram kedua DFA untuk perbandingan
     drawAutomata(
       "diagram5a-container",
       d1.states,
@@ -668,9 +651,8 @@ async function checkEquivalence() {
   }
 }
 
-// Initialize on window load
+// Inisialisasi awal
 window.addEventListener("load", () => {
-  // Initialize DFA Tester with example
   buildDFATable();
   const exTrans = {
     "q0|||0": "q1", "q0|||1": "q0",
@@ -679,7 +661,6 @@ window.addEventListener("load", () => {
   };
   Object.assign(dfaData.trans, exTrans);
   
-  // Set inputs inside table container to match example
   setTimeout(() => {
     Object.entries(exTrans).forEach(([k, v]) => {
       const el = document.querySelector(

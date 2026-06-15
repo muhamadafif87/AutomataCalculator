@@ -1,4 +1,4 @@
-# AUTOMATA.PY - Facade for Modular Automata Classes and Functions
+# Facade untuk kelas dan fungsi modul automata
 
 from dfa import DFA
 from nfa import NFA

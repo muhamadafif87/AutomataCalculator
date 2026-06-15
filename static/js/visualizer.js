@@ -1,5 +1,5 @@
 /**
- * VISUALIZER.JS - Cytoscape.js based automata visualization with Premium Glowing Neon Dark Styling
+ * VISUALISASI DIAGRAM AUTOMATA (CYTOSCAPE.JS)
  */
 
 const automataGraphs = {};
@@ -145,7 +145,7 @@ function computeThompsonPositions(tree, width, height) {
   };
 }
 
-// Ensure Dagre plugin is registered in Cytoscape
+// Registrasi plugin Dagre untuk tata letak hirarkis
 if (typeof cytoscape !== "undefined" && typeof cytoscapeDagre !== "undefined") {
   cytoscape.use(cytoscapeDagre);
 }
@@ -213,10 +213,10 @@ function drawAutomata(
     };
   });
 
-  // Check if there is any active/filled transition edge
+  // Cek apakah ada transisi
   let hasEdges = false;
 
-  // Build edge map to combine duplicate labels per source -> target pair
+  // Gabungkan transisi dengan source dan target yang sama
   const edgeMap = {};
   Object.entries(transitions).forEach(([key, dest]) => {
     const [from, sym] = key.split("|||");
@@ -433,17 +433,16 @@ function drawAutomata(
     autoungrabify: false,
   });
 
-  // Determine layout dynamically
+  // Tentukan tata letak diagram secara dinamis
   let layoutOptions;
   if (preset) {
-    // NFA generated via Thompson (preset positions)
+    // Gunakan posisi koordinat preset untuk NFA Thompson
     layoutOptions = { name: "preset", fit: true, padding: 35, animate: false };
   } else if (!hasEdges) {
-    // If there are no transitions, lay out states in a straight horizontal line!
-    // This is clean, neat, and highly balanced
+    // Jika tidak ada transisi, atur dalam satu baris horizontal lurus
     layoutOptions = { name: "grid", rows: 1, fit: true, padding: 35, animate: false };
   } else {
-    // General DFA, use Dagre hierarchical layout
+    // DFA menggunakan tata letak hierarkis Dagre (kiri ke kanan)
     const useDagre = typeof cytoscapeDagre !== "undefined";
     layoutOptions = useDagre
       ? {
@@ -470,7 +469,7 @@ function drawAutomata(
   const layout = cy.layout(layoutOptions);
   layout.run();
 
-  // Detect and tag backward edges for unbundled curving in preset/thompson view
+  // Deteksi dan tag transisi arah mundur agar melengkung ke atas/bawah
   cy.ready(() => {
     cy.edges().forEach((edge) => {
       const source = edge.source();
@@ -484,7 +483,7 @@ function drawAutomata(
       }
     });
     
-    // Position start marker pointing to the root state
+    // Posisikan panah start-marker menunjuk ke start state
     if (rootState) {
       const root = cy.getElementById(rootState);
       const marker = cy.getElementById(`${containerId}-start-marker`);
@@ -496,7 +495,7 @@ function drawAutomata(
         }, 50);
       }
     }
-    // Cursor hints and hover highlights for dragging states and panning the canvas
+    // Event handler kursor saat interaksi drag dan hover node
     cy.on('mouseover', 'node', (evt) => {
       if (!evt.target.hasClass('start-marker')) {
         container.style.cursor = 'grab';
@@ -534,7 +533,7 @@ function drawAutomata(
   automataGraphs[containerId] = cy;
 }
 
-// Floating controls handlers (Zoom and Center)
+// Kontrol Diagram (Zoom dan Penyesuaian Fit)
 function zoomGraph(containerId, factor) {
   const cy = automataGraphs[containerId];
   if (cy) {

@@ -4,19 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Automata Calculator</title>
-    <!-- Google Fonts -->
+    <!-- Font Google -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <!-- Local Visualization Libraries (Offline & Reliable) -->
+    <!-- Pustaka Visualisasi Lokal (Offline & Andal) -->
     <script src="{{ url_for('static', filename='js/cytoscape.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/dagre.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/cytoscape-dagre.js') }}"></script>
     <script src="{{ url_for('static', filename='js/svg-pan-zoom.min.js') }}"></script>
-    <!-- Stylesheet -->
+    <!-- Lembar Gaya CSS -->
     <link
       rel="stylesheet"
       href="{{ url_for('static', filename='css/style.css') }}"
@@ -33,7 +33,7 @@
         <p class="header-subtitle">Mata Kuliah Teori Bahasa & Automata</p>
       </div>
 
-      <!-- Navigation Tabs -->
+      <!-- Tab Navigasi -->
       <div class="tabs-container">
         <div class="tabs">
           <button class="tab active" onclick="switchTab('dfa', this)">
@@ -51,7 +51,7 @@
         </div>
       </div>
 
-      <!-- ==================== TAB 1: DFA TESTER ==================== -->
+      <!-- ==================== TAB 1: PENGUJIAN DFA ==================== -->
       <div id="tab-dfa" class="panel active">
         <div class="grid-layout">
           <div class="side-controls">
@@ -177,7 +177,7 @@
                 <span class="badge badge-dfa">DFA </span>
               </div>
 
-              <!-- Diagram Container & Controls -->
+              <!-- Wadah Diagram & Kontrol -->
               <div class="diagram-wrapper">
                 <div class="diagram-controls">
                   <button
@@ -277,7 +277,7 @@
         </div>
       </div>
 
-      <!-- ==================== TAB 2: REGEX → NFA ==================== -->
+      <!-- ==================== TAB 2: KONVERSI REGEX KE NFA ==================== -->
       <div id="tab-regex" class="panel">
         <div class="grid-layout">
           <div class="side-controls">
@@ -452,7 +452,7 @@
         </div>
       </div>
 
-      <!-- ==================== TAB 3: MINIMIZER ==================== -->
+      <!-- ==================== TAB 3: MINIMISASI DFA ==================== -->
       <div id="tab-min" class="panel">
         <div class="grid-layout">
           <div class="side-controls">
@@ -638,7 +638,7 @@
         </div>
       </div>
 
-      <!-- ==================== TAB 4: EQUIVALENCE ==================== -->
+      <!-- ==================== TAB 4: EKUIVALENSI DFA ==================== -->
       <div id="tab-equiv" class="panel">
         <div class="grid-layout-equiv">
           <div class="equiv-inputs">
@@ -756,7 +756,7 @@
       </div>
     </div>
 
-    <!-- Scripts -->
+    <!-- Skrip Javascript -->
     <script src="{{ url_for('static', filename='js/visualizer.js') }}"></script>
     <script src="{{ url_for('static', filename='js/app.js') }}"></script>
   </body>

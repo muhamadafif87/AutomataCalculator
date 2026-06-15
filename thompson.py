@@ -1,3 +1,4 @@
+# STATE COUNTER UNTUK THOMPSON
 class ThompsonStateCounter:
     def __init__(self):
         self.count = 0
@@ -6,6 +7,7 @@ class ThompsonStateCounter:
         self.count += 1
         return s
 
+# TOKENISASI EKSPRESI REGULER (REGEX)
 def tokenize_regex(regex):
     tokens = []
     for c in regex:
@@ -30,6 +32,7 @@ def tokenize_regex(regex):
                 out.append({'type': 'CONCAT', 'val': '.'})
     return out
 
+# KONVERSI REGEX INFIX KE POSTFIX
 def regex_to_postfix(tokens):
     prec = {'|': 1, 'CONCAT': 2, '*': 3, '+': 3}
     out = []
@@ -52,6 +55,7 @@ def regex_to_postfix(tokens):
         out.append(stack.pop())
     return out
 
+# KONSTRUKSI NFA DARI POSTFIX THOMPSON
 def build_nfa_from_postfix(postfix):
     counter = ThompsonStateCounter()
     stack = []

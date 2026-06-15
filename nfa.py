@@ -1,3 +1,4 @@
+# LOGIKA MESIN NFA
 class NFA:
     def __init__(self, states, alphabet, start_state, final_states, transitions):
         self.states = [s.strip() for s in states if s.strip()]
@@ -35,7 +36,7 @@ class NFA:
 
     def test_string(self, input_str):
         raw = input_str.strip()
-        symbols = list(raw) # NFAs from regex typically match single characters
+        symbols = list(raw) # Uji string per karakter
 
         current_set = self.epsilon_closure([self.start_state])
         

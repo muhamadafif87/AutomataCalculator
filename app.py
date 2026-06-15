@@ -6,12 +6,12 @@ from automata import DFA, NFA, check_equivalence, tokenize_regex, regex_to_postf
 
 app = Flask(__name__)
 
-# Route to serve the main HTML page
+# Routing halaman utama
 @app.route('/')
 def index():
     return render_template('index.html')
 
-# Endpoint: DFA Testing
+# Endpoint: Simulasi DFA
 @app.route('/api/dfa/test', methods=['POST'])
 def api_test_dfa():
     try:
@@ -23,7 +23,7 @@ def api_test_dfa():
         trans = data.get('trans', {})
         input_str = data.get('input_str', '')
 
-        # Build DFA and test string
+        # Proses instansiasi DFA dan uji string
         dfa = DFA(states, alpha, start, finals, trans)
         accepted, trace, final_state = dfa.test_string(input_str)
 
@@ -39,7 +39,7 @@ def api_test_dfa():
             'message': str(e)
         }), 400
 
-# Endpoint: NFA Testing
+# Endpoint: Simulasi NFA
 @app.route('/api/nfa/test', methods=['POST'])
 def api_test_nfa():
     try:
@@ -65,7 +65,7 @@ def api_test_nfa():
             'message': str(e)
         }), 400
 
-# Endpoint: Regex to NFA (Thompson's construction)
+# Endpoint: Konversi Regex ke NFA Thompson
 @app.route('/api/regex/to-nfa', methods=['POST'])
 def api_regex_to_nfa():
     try:
@@ -92,7 +92,7 @@ def api_regex_to_nfa():
             'message': f"Gagal memproses regex: {str(e)}"
         }), 400
 
-# Endpoint: DFA Minimization
+# Endpoint: Minimisasi DFA
 @app.route('/api/dfa/minimize', methods=['POST'])
 def api_minimize_dfa():
     try:
@@ -116,7 +116,7 @@ def api_minimize_dfa():
             'message': str(e)
         }), 400
 
-# Endpoint: DFA Equivalence Check
+# Endpoint: Cek Ekuivalensi DFA
 @app.route('/api/dfa/equivalence', methods=['POST'])
 def api_check_equivalence():
     try:
@@ -144,7 +144,8 @@ def open_browser():
     webbrowser.open_new("http://127.0.0.1:5000/")
 
 if __name__ == '__main__':
-    # Only launch browser once in development mode (Werkzeug reloader creates a subprocess)
+
+    # buat buka browser otomatis
     if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
         Timer(1.0, open_browser).start()
     elif not os.environ.get("FLASK_DEBUG") and not os.environ.get("WERKZEUG_RUN_MAIN"):

@@ -1,35 +1,33 @@
-/* ==========================================================================
-   DESIGN SYSTEM - AUTOMATA LAB PREMIUM DARK THEME
-   ========================================================================== */
+/* SISTEM DESAIN - TEMA TERANG MINIMALIS */
 
    :root {
-    --bg-dark: #f8fafc; /* Slate 50 */
-    --bg-app: #f1f5f9;  /* Slate 100 */
-    --surface-glass: #ffffff; /* Clean white card */
+    --bg-dark: #f8fafc;
+    --bg-app: #f1f5f9;
+    --surface-glass: #ffffff;
     --surface-glass-active: #f8fafc;
-    --border-glass: #cbd5e1;  /* Slate 200 */
+    --border-glass: #cbd5e1;
     --border-glass-strong: #2563eb;
     
-    /* Solid Brand Colors */
-    --indigo: #2563eb; /* Royal Blue */
+    /* Aksen Warna */
+    --indigo: #2563eb;
     --indigo-glow: rgba(37, 99, 235, 0.08);
     --indigo-glow-strong: rgba(37, 99, 235, 0.2);
     
-    --emerald: #059669; /* Emerald Green */
+    --emerald: #059669;
     --emerald-glow: rgba(5, 150, 105, 0.08);
     
-    --rose: #dc2626; /* Crimson Red */
+    --rose: #dc2626;
     --rose-glow: rgba(220, 38, 38, 0.08);
     
-    --amber: #d97706; /* Amber Orange */
+    --amber: #d97706;
     --amber-glow: rgba(217, 119, 6, 0.08);
     
-    --success: var(--emerald); /* Map success to emerald */
+    --success: var(--emerald);
     
-    /* Typography & Text */
-    --text-primary: #0f172a; /* Slate 900 */
-    --text-secondary: #475569; /* Slate 600 */
-    --text-muted: #64748b; /* Slate 500 */
+    /* Tipografi & Teks */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
     
     --font-sans: 'Plus Jakarta Sans', sans-serif;
     --font-mono: 'Plus Jakarta Sans', sans-serif;
@@ -38,10 +36,10 @@
     --radius-md: 8px;
     --radius-sm: 6px;
     
-    --transition-smooth: all 0.15s ease-out; /* Faster transitions */
+    --transition-smooth: all 0.15s ease-out;
   }
   
-  /* Reset & Base Styles */
+  /* Reset & Gaya Dasar */
   * {
     box-sizing: border-box;
     margin: 0;
@@ -59,7 +57,7 @@
     line-height: 1.5;
   }
   
-  /* Radial Glow Backgrounds */
+  /* Latar Belakang Gradien */
   .glow-bg {
     position: fixed;
     top: 0;
@@ -74,7 +72,7 @@
       radial-gradient(circle at 50% 50%, #f1f5f9 0%, var(--bg-dark) 100%);
   }
   
-  /* Main Container */
+  /* Kontainer Utama */
   .app {
     max-width: 1280px;
     margin: 0 auto;
@@ -114,7 +112,7 @@
     letter-spacing: 2px;
   }
   
-  /* Navigation Tabs */
+  /* Navigasi Tab */
   .tabs-container {
     display: flex;
     justify-content: center;
@@ -168,7 +166,7 @@
     border-radius: 4px;
   }
   
-  /* Panels */
+  /* Panel Konten */
   .panel {
     display: none;
     animation: fadeIn 0.4s ease-out;
@@ -178,7 +176,7 @@
     display: block;
   }
   
-  /* Grid Layouts */
+  /* Tata Letak Grid */
   .grid-layout {
     display: grid;
     grid-template-columns: 380px 1fr;
@@ -215,7 +213,7 @@
     flex-direction: column;
   }
   
-  /* Cards */
+  /* Kartu Kontainer */
   .card {
     background: var(--surface-glass);
     border: 1px solid var(--border-glass);
@@ -251,7 +249,7 @@
     padding-left: 10px;
   }
   
-  /* Form Elements */
+  /* Elemen Formulir */
   .form-group {
     margin-bottom: 16px;
   }
@@ -298,7 +296,7 @@
     background: #ffffff;
   }
   
-  /* Buttons */
+  /* Tombol */
   .btn {
     display: inline-flex;
     align-items: center;
@@ -377,7 +375,7 @@
     margin: 8px 0;
   }
   
-  /* Diagram Visualizer Containers */
+  /* Wadah Diagram Visualisasi */
   .diagram-wrapper {
     position: relative;
     width: 100%;
@@ -419,7 +417,7 @@
     letter-spacing: 1px;
   }
   
-  /* Diagram Floating Controls */
+  /* Kontrol Diagram Melayang */
   .diagram-controls {
     position: absolute;
     top: 12px;
@@ -472,7 +470,7 @@
     display: inline-block;
   }
   
-  /* Tables styling */
+  /* Desain Tabel */
   .table-scroll {
     overflow-x: auto;
     margin-top: 4px;
@@ -526,7 +524,7 @@
     color: var(--text-primary);
   }
   
-  /* Result Box styles */
+  /* Kotak Hasil */
   .result-box {
     margin-top: 16px;
     padding: 14px 16px;
@@ -562,7 +560,7 @@
     color: #b45309;
   }
   
-  /* Step Trace styling */
+  /* Penelusuran Langkah */
   .step-trace {
     margin-top: 12px;
     display: flex;
@@ -609,7 +607,7 @@
     border-color: rgba(220, 38, 38, 0.15);
   }
   
-  /* Badges & Tags */
+  /* Lencana dan Label */
   .badge {
     display: inline-block;
     padding: 4px 10px;
@@ -632,7 +630,7 @@
     color: #b45309;
   }
   
-  /* Scrollbar Customization */
+  /* Kustomisasi Scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
@@ -651,7 +649,7 @@
     background: var(--indigo);
   }
   
-  /* NFA Scroll Table & Scroll Panel */
+  /* Tabel Scroll NFA */
   .nfa-scroll {
     overflow-x: auto;
     max-height: 250px;
@@ -668,7 +666,7 @@
     font-family: var(--font-mono);
   }
   
-  /* Metadata Info block */
+  /* Blok Informasi Metadata */
   .meta-info p {
     font-family: var(--font-mono);
     font-size: 11px;
@@ -715,7 +713,7 @@
     font-weight: 600;
   }
   
-  /* Equivalence Big Symbol Output */
+  /* Output Simbol Ekuivalensi */
   .equiv-big {
     text-align: center;
     font-size: 48px;
@@ -738,7 +736,7 @@
     text-transform: uppercase;
   }
   
-  /* Animations */
+  /* Animasi */
   @keyframes pulseOrb {
     0%, 100% {
       transform: scale(1);
@@ -766,7 +764,7 @@
     animation: fadeIn 0.4s ease-out;
   }
   
-  /* Responsive Layouts */
+  /* Tata Letak Responsif */
   @media (max-width: 960px) {
     .grid-layout {
       grid-template-columns: 1fr;

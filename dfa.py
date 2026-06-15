@@ -1,3 +1,4 @@
+# LOGIKA MESIN DFA
 class DFA:
     def __init__(self, states, alphabet, start_state, final_states, transitions):
         self.states = [s.strip() for s in states if s.strip()]
@@ -8,7 +9,7 @@ class DFA:
 
     def test_string(self, input_str):
         raw = input_str.strip()
-        # Split by whitespace if there is any space, otherwise split by characters
+        # Pecah string masukan menjadi simbol-simbol transisi
         if ' ' in raw:
             symbols = [s for s in raw.split(' ') if s]
         else:
@@ -55,6 +56,6 @@ class DFA:
         return accepted, trace, current
 
     def minimize(self):
-        # We import here to avoid circular dependencies
+        # Impor lokal untuk mencegah circular import
         from minimizer import minimize_dfa
         return minimize_dfa(self)

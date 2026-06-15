@@ -1,7 +1,8 @@
+# ALGORITMA CEK EKUIVALENSI DUA DFA
 import collections
 
 def check_equivalence(dfa1, dfa2):
-    # Check if alphabets are equivalent
+    # Cek apakah simbol alphabet kedua mesin sama
     a1 = set(dfa1.alphabet)
     a2 = set(dfa2.alphabet)
     if a1 != a2:
@@ -11,7 +12,7 @@ def check_equivalence(dfa1, dfa2):
     visited = set()
     queue = collections.deque([(dfa1.start_state, dfa2.start_state)])
     
-    # Store path to reconstruct counterexample
+    # Catat jalur transisi untuk rekonstruksi counterexample jika tidak ekuivalen
     path = {f"{dfa1.start_state},{dfa2.start_state}": ""}
     inequiv = False
     counter_ex = None

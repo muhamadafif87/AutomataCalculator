@@ -1,7 +1,8 @@
+# ALGORITMA MINIMISASI DFA
 import collections
 
 def minimize_dfa(dfa_instance):
-    # 1. Reachability Analysis
+    # 1. Analisis Keterjangkauan State (Reachability)
     reachable = set([dfa_instance.start_state])
     queue = collections.deque([dfa_instance.start_state])
     while queue:
@@ -15,14 +16,14 @@ def minimize_dfa(dfa_instance):
 
     r_states = sorted(list(reachable))
 
-    # Helper to get the group index of a state
+    # Fungsi bantu untuk mencari indeks kelompok state
     def get_group_idx(state, partition):
         for i, group in enumerate(partition):
             if state in group:
                 return i
         return -1
 
-    # 2. Initial Partition: Final states vs Non-final states
+    # 2. Partisi Awal: Kelompok State Final vs Non-Final
     group_finals = [s for s in r_states if s in dfa_instance.final_states]
     group_nonfinals = [s for s in r_states if s not in dfa_instance.final_states]
 
@@ -32,7 +33,7 @@ def minimize_dfa(dfa_instance):
     if group_nonfinals:
         partition.append(group_nonfinals)
 
-    # 3. Partition Refinement Loop
+    # 3. Iterasi Penyempurnaan Partisi (Refinement)
     changed = True
     while changed:
         changed = False
@@ -42,7 +43,7 @@ def minimize_dfa(dfa_instance):
                 new_partition.append(group)
                 continue
 
-            # Group states by their transition signatures
+            # Kelompokkan state berdasarkan kemiripan transisi
             subgroups = {}
             for s in group:
                 sig = []
@@ -62,18 +63,18 @@ def minimize_dfa(dfa_instance):
                 new_partition.append(sub)
         partition = new_partition
 
-    # Find the group containing start state
+    # Cari kelompok yang berisi start state
     start_group_idx = -1
     for idx, group in enumerate(partition):
         if dfa_instance.start_state in group:
             start_group_idx = idx
             break
 
-    # Reorder partition so that the start group is first (helps make it M0)
+    # Atur posisi agar kelompok start state berada di urutan pertama (M0)
     if start_group_idx > 0:
         partition.insert(0, partition.pop(start_group_idx))
 
-    # 4. Construct Minimized DFA
+    # 4. Bangun Hasil DFA Minimal
     min_states = [f"M{i}" for i in range(len(partition))]
     min_start = "M0"
     min_finals = []
