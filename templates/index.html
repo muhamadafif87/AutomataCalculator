@@ -1,0 +1,763 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Automata Calculator</title>
+    <!-- Font Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <!-- Pustaka Visualisasi Lokal (Offline & Andal) -->
+    <script src="{{ url_for('static', filename='js/cytoscape.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/dagre.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/cytoscape-dagre.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/svg-pan-zoom.min.js') }}"></script>
+    <!-- Lembar Gaya CSS -->
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body>
+    <div class="glow-bg"></div>
+    <div class="app">
+      <!-- Header -->
+      <div class="header">
+        <div class="header-logo">
+          <h1>Automata Calculator</h1>
+        </div>
+        <p class="header-subtitle">Mata Kuliah Teori Bahasa & Automata</p>
+      </div>
+
+      <!-- Tab Navigasi -->
+      <div class="tabs-container">
+        <div class="tabs">
+          <button class="tab active" onclick="switchTab('dfa', this)">
+            <span class="tab-num">01</span> DFA Tester
+          </button>
+          <button class="tab" onclick="switchTab('regex', this)">
+            <span class="tab-num">02</span> Regex → NFA
+          </button>
+          <button class="tab" onclick="switchTab('min', this)">
+            <span class="tab-num">03</span> Minimizer
+          </button>
+          <button class="tab" onclick="switchTab('equiv', this)">
+            <span class="tab-num">04</span> Equivalence
+          </button>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 1: PENGUJIAN DFA ==================== -->
+      <div id="tab-dfa" class="panel active">
+        <div class="grid-layout">
+          <div class="side-controls">
+            <div class="card glass-card">
+              <div class="card-title">Definisi DFA</div>
+
+              <div class="form-group">
+                <label for="dfa-states"
+                  >States (Q)
+                  <span class="label-desc">(pisahkan dengan koma)</span></label
+                >
+                <input
+                  id="dfa-states"
+                  value="q0,q1,q2"
+                  placeholder="q0,q1,q2"
+                />
+              </div>
+
+              <div class="form-group">
+                <label for="dfa-alpha"
+                  >Alphabet (Σ)
+                  <span class="label-desc">(pisahkan dengan koma)</span></label
+                >
+                <input id="dfa-alpha" value="0,1" placeholder="0,1" />
+              </div>
+
+              <div class="form-group">
+                <label for="dfa-start">Start State (q₀)</label>
+                <input id="dfa-start" value="q0" placeholder="q0" />
+              </div>
+
+              <div class="form-group">
+                <label for="dfa-final"
+                  >Final States (F)
+                  <span class="label-desc">(pisahkan dengan koma)</span></label
+                >
+                <input id="dfa-final" value="q2" placeholder="q2" />
+              </div>
+
+              <div class="btn-row">
+                <button class="btn btn-primary" onclick="buildDFATable()">
+                  Build Tabel Transisi
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="card glass-card fade-in"
+              id="dfa-trans-card"
+              style="display: none"
+            >
+              <div class="card-title">Matriks Transisi (δ)</div>
+              <div class="table-scroll">
+                <div id="dfa-trans-container"></div>
+              </div>
+              <div class="btn-row">
+                <button
+                  class="btn btn-ghost btn-sm"
+                  onclick="renderDFAdiagram()"
+                >
+                  Refresh Diagram
+                </button>
+              </div>
+            </div>
+
+            <div class="card glass-card" id="dfa-test-card">
+              <div class="card-title">Uji String</div>
+              <div class="form-group">
+                <label for="dfa-input-str"
+                  >Input String
+                  <span class="label-desc"
+                    >(gunakan spasi sebagai pemisah jika simbol > 1 char)</span
+                  ></label
+                >
+                <input
+                  id="dfa-input-str"
+                  value="010"
+                  placeholder="contoh: 010 atau 0 1 0"
+                />
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-accent" onclick="testDFA()">
+                  Simulasikan String
+                </button>
+                <button
+                  id="btn-clear"
+                  class="btn btn-ghost btn-sm"
+                  onclick="clearDFATest()"
+                >
+                  Reset
+                </button>
+              </div>
+              <div id="dfa-result"></div>
+            </div>
+
+            <div
+              class="card glass-card"
+              id="dfa-trace-card"
+              style="display: none"
+            >
+              <div class="card-title">Trace Eksekusi</div>
+              <div id="dfa-trace"></div>
+            </div>
+          </div>
+
+          <div class="diagram-area">
+            <div class="card glass-card tall-card">
+              <div class="card-title">
+                Visualisasi Graf DFA
+                <span class="badge badge-dfa">DFA </span>
+              </div>
+
+              <!-- Wadah Diagram & Kontrol -->
+              <div class="diagram-wrapper">
+                <div class="diagram-controls">
+                  <button
+                    class="control-btn"
+                    onclick="zoomGraph('diagram-container', 1.2)"
+                    title="Zoom In"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                  <button
+                    class="control-btn"
+                    onclick="zoomGraph('diagram-container', 0.8)"
+                    title="Zoom Out"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                  <button
+                    class="control-btn"
+                    onclick="fitGraph('diagram-container')"
+                    title="Fit Canvas"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="diagram-wrap" id="diagram-container">
+                  <div class="diagram-placeholder">
+                    DEFINISIKAN DFA & KLIK BUILD TABEL UNTUK MELIHAT DIAGRAM
+                  </div>
+                </div>
+              </div>
+
+              <div class="diagram-legend">
+                <div class="legend-item">
+                  <span
+                    class="legend-indicator"
+                    style="background: var(--text-muted)"
+                  ></span>
+                  Start State (→)
+                </div>
+                <div class="legend-item">
+                  <span
+                    class="legend-indicator"
+                    style="border: 2.5px double var(--indigo)"
+                  ></span>
+                  Final State (◎)
+                </div>
+                <div class="legend-item">
+                  <span
+                    class="legend-indicator"
+                    style="background: var(--success)"
+                  ></span>
+                  Active State (●)
+                </div>
+                <div
+                  class="legend-item"
+                  style="
+                    color: var(--text-secondary);
+                    margin-left: auto;
+                    font-size: 12px;
+                    font-weight: 600;
+                  "
+                >
+                  Seret state untuk merapikan · Geser area kosong untuk panning
+                  · Scroll untuk zoom
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 2: KONVERSI REGEX KE NFA ==================== -->
+      <div id="tab-regex" class="panel">
+        <div class="grid-layout">
+          <div class="side-controls">
+            <div class="card glass-card">
+              <div class="card-title">Ekspresi Reguler (Regex)</div>
+              <div class="form-group">
+                <label for="regex-input">Regex Pattern</label>
+                <input
+                  id="regex-input"
+                  value="(a|b)*abb"
+                  placeholder="contoh: (a|b)*abb"
+                />
+              </div>
+              <div class="regex-tips">
+                <p class="tips-title">Operator yang Didukung:</p>
+                <ul>
+                  <li><code>|</code> atau <code>/</code> : Union / Pilihan</li>
+                  <li><code>*</code> : Kleene Star (0 atau lebih kali)</li>
+                  <li><code>+</code> : Kleene Plus (1 atau lebih kali)</li>
+                  <li><code>ab</code> (implicit) : Konkatenasi / Berurutan</li>
+                  <li><code>( )</code> : Pengelompokan prioritas</li>
+                  <li><code>ε</code> : Epsilon transition</li>
+                </ul>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-primary" onclick="buildNFAFromRegex()">
+                  Konversi ke ε-NFA
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </div>
+              <div id="regex-result"></div>
+            </div>
+
+            <div
+              class="card glass-card fade-in"
+              id="nfa-info-card"
+              style="display: none"
+            >
+              <div class="card-title">Metadata NFA</div>
+              <div id="nfa-info" class="meta-info"></div>
+            </div>
+
+            <div class="card glass-card">
+              <div class="card-title">Pengujian String</div>
+              <div class="form-group">
+                <label for="nfa-input-str">Input String</label>
+                <input
+                  id="nfa-input-str"
+                  value="abb"
+                  placeholder="Masukkan string uji, misal: abb"
+                />
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-accent" onclick="testNFA()">
+                  Uji pada NFA
+                </button>
+              </div>
+              <div id="nfa-result"></div>
+            </div>
+          </div>
+
+          <div class="diagram-area">
+            <div class="card glass-card tall-card">
+              <div class="card-title">
+                Visualisasi Graf ε-NFA (Metode Thompson)
+                <span class="badge badge-nfa">ε-NFA </span>
+              </div>
+
+              <div class="diagram-wrapper">
+                <div class="diagram-controls">
+                  <button
+                    class="control-btn"
+                    onclick="zoomGraph('diagram2-container', 1.2)"
+                    title="Zoom In"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                  <button
+                    class="control-btn"
+                    onclick="zoomGraph('diagram2-container', 0.8)"
+                    title="Zoom Out"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                  </button>
+                  <button
+                    class="control-btn"
+                    onclick="fitGraph('diagram2-container')"
+                    title="Fit Canvas"
+                  >
+                    <svg
+                      width="14"
+                      height="14"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                    >
+                      <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                    </svg>
+                  </button>
+                </div>
+                <div class="diagram-wrap" id="diagram2-container">
+                  <div class="diagram-placeholder">
+                    MASUKKAN REGEX & KLIK KONVERSI UNTUK MELIHAT GRAF NFA
+                  </div>
+                </div>
+              </div>
+
+              <div class="diagram-legend">
+                <div class="legend-item">
+                  <span
+                    class="legend-indicator"
+                    style="background: var(--text-muted)"
+                  ></span>
+                  ε = transisi kosong (epsilon)
+                </div>
+                <div
+                  class="legend-item"
+                  style="
+                    color: var(--text-secondary);
+                    margin-left: auto;
+                    font-size: 12px;
+                    font-weight: 600;
+                  "
+                >
+                  Seret state untuk merapikan · Geser area kosong untuk panning
+                  · Scroll untuk zoom
+                </div>
+              </div>
+            </div>
+
+            <div class="card glass-card" style="margin-top: 16px">
+              <div class="card-title">Tabel Transisi ε-NFA</div>
+              <div class="nfa-scroll" id="nfa-trans-table">
+                <div class="table-placeholder">
+                  Tabel transisi akan muncul di sini setelah NFA dibangun.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 3: MINIMISASI DFA ==================== -->
+      <div id="tab-min" class="panel">
+        <div class="grid-layout">
+          <div class="side-controls">
+            <div class="card glass-card">
+              <div class="card-title">Definisi DFA Awal</div>
+
+              <div class="form-group">
+                <label for="min-states">States (Q)</label>
+                <input id="min-states" value="q0,q1,q2,q3,q4" />
+              </div>
+
+              <div class="form-group">
+                <label for="min-alpha">Alphabet (Σ)</label>
+                <input id="min-alpha" value="0,1" />
+              </div>
+
+              <div class="form-group">
+                <label for="min-start">Start State (q₀)</label>
+                <input id="min-start" value="q0" />
+              </div>
+
+              <div class="form-group">
+                <label for="min-final">Final States (F)</label>
+                <input id="min-final" value="q4" />
+              </div>
+
+              <div class="btn-row">
+                <button class="btn btn-primary" onclick="buildMinTable()">
+                  Build Tabel Transisi
+                  <svg
+                    width="14"
+                    height="14"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                  >
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <polyline points="12 5 19 12 12 19"></polyline>
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="card glass-card fade-in"
+              id="min-trans-card"
+              style="display: none"
+            >
+              <div class="card-title">Tabel Transisi DFA Awal</div>
+              <div class="table-scroll">
+                <div id="min-trans-container"></div>
+              </div>
+              <div class="btn-row">
+                <button class="btn btn-accent" onclick="minimizeDFA()">
+                  Minimalkan DFA
+                </button>
+              </div>
+            </div>
+
+            <div id="min-result"></div>
+          </div>
+
+          <div class="diagram-area">
+            <div class="double-diagram-grid">
+              <div class="card glass-card tall-card">
+                <div class="card-title">DFA Awal</div>
+                <div class="diagram-wrapper">
+                  <div class="diagram-controls">
+                    <button
+                      class="control-btn"
+                      onclick="zoomGraph('diagram3-container', 1.2)"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <button
+                      class="control-btn"
+                      onclick="zoomGraph('diagram3-container', 0.8)"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <button
+                      class="control-btn"
+                      onclick="fitGraph('diagram3-container')"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="diagram-wrap" id="diagram3-container">
+                    <div class="diagram-placeholder">DFA AWAL</div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="card glass-card tall-card">
+                <div class="card-title">DFA Hasil Minimisasi</div>
+                <div class="diagram-wrapper">
+                  <div class="diagram-controls">
+                    <button
+                      class="control-btn"
+                      onclick="zoomGraph('diagram4-container', 1.2)"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <button
+                      class="control-btn"
+                      onclick="zoomGraph('diagram4-container', 0.8)"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                      </svg>
+                    </button>
+                    <button
+                      class="control-btn"
+                      onclick="fitGraph('diagram4-container')"
+                    >
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div class="diagram-wrap" id="diagram4-container">
+                    <div class="diagram-placeholder">DFA MINIMAL</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== TAB 4: EKUIVALENSI DFA ==================== -->
+      <div id="tab-equiv" class="panel">
+        <div class="grid-layout-equiv">
+          <div class="equiv-inputs">
+            <div class="card glass-card">
+              <div class="card-title">DFA Ke-1</div>
+              <div class="form-group">
+                <label for="eq1-states">States (Q)</label>
+                <input id="eq1-states" value="q0,q1" />
+              </div>
+              <div class="form-group">
+                <label for="eq1-alpha">Alphabet (Σ)</label>
+                <input id="eq1-alpha" value="0,1" />
+              </div>
+              <div class="form-group">
+                <label for="eq1-start">Start State</label>
+                <input id="eq1-start" value="q0" />
+              </div>
+              <div class="form-group">
+                <label for="eq1-final">Final States</label>
+                <input id="eq1-final" value="q1" />
+              </div>
+              <div class="btn-row">
+                <button
+                  class="btn btn-ghost btn-sm"
+                  onclick="buildEquivTable(1)"
+                >
+                  Build Tabel DFA 1
+                </button>
+              </div>
+              <div class="table-scroll-mini" id="eq1-trans-container"></div>
+            </div>
+
+            <div class="card glass-card">
+              <div class="card-title">DFA Ke-2</div>
+              <div class="form-group">
+                <label for="eq2-states">States (Q)</label>
+                <input id="eq2-states" value="p0,p1,p2" />
+              </div>
+              <div class="form-group">
+                <label for="eq2-alpha">Alphabet (Σ)</label>
+                <input id="eq2-alpha" value="0,1" />
+              </div>
+              <div class="form-group">
+                <label for="eq2-start">Start State</label>
+                <input id="eq2-start" value="p0" />
+              </div>
+              <div class="form-group">
+                <label for="eq2-final">Final States</label>
+                <input id="eq2-final" value="p1,p2" />
+              </div>
+              <div class="btn-row">
+                <button
+                  class="btn btn-ghost btn-sm"
+                  onclick="buildEquivTable(2)"
+                >
+                  Build Tabel DFA 2
+                </button>
+              </div>
+              <div class="table-scroll-mini" id="eq2-trans-container"></div>
+            </div>
+          </div>
+
+          <div class="equiv-action">
+            <button class="btn btn-accent btn-lg" onclick="checkEquivalence()">
+              Cek Ekuivalensi DFA
+              <svg
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <polyline points="16 3 21 8 16 13"></polyline>
+                <line x1="21" y1="8" x2="9" y2="8"></line>
+                <polyline points="8 21 3 16 8 11"></polyline>
+                <line x1="3" y1="16" x2="15" y2="16"></line>
+              </svg>
+            </button>
+          </div>
+
+          <div class="equiv-result-area">
+            <div
+              class="card glass-card"
+              id="equiv-result-card"
+              style="display: none"
+            >
+              <div class="card-title">Hasil Pemeriksaan Ekuivalensi</div>
+
+              <div id="equiv-result"></div>
+
+              <div class="double-diagram-grid" style="margin-top: 16px">
+                <div class="diagram-cell">
+                  <span class="cell-label">Visualisasi DFA 1</span>
+                  <div class="diagram-wrapper">
+                    <div
+                      class="diagram-wrap small-diagram"
+                      id="diagram5a-container"
+                    ></div>
+                  </div>
+                </div>
+                <div class="diagram-cell">
+                  <span class="cell-label">Visualisasi DFA 2</span>
+                  <div class="diagram-wrapper">
+                    <div
+                      class="diagram-wrap small-diagram"
+                      id="diagram5b-container"
+                    ></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Skrip Javascript -->
+    <script src="{{ url_for('static', filename='js/visualizer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  </body>
+</html>

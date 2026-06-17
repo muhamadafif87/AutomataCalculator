@@ -1,15 +1,15 @@
 /**
- * VISUALIZER.JS - Cytoscape based automata visualization
+ * VISUALISASI DIAGRAM AUTOMATA (CYTOSCAPE.JS)
  */
 
 const automataGraphs = {};
 
 function computeThompsonPositions(tree, width, height) {
   const positions = {};
-  const nodeGapX = 118;
-  const branchGapY = 104;
-  const mergeGapX = 92;
-  const startX = 92;
+  const nodeGapX = 130;
+  const branchGapY = 95;
+  const mergeGapX = 90;
+  const startX = 70;
   const startY = Math.max(100, Math.min(height - 100, height / 2));
 
   function measure(fragment) {
@@ -129,8 +129,8 @@ function computeThompsonPositions(tree, width, height) {
     maxY = Math.max(maxY, pos.y);
   });
 
-  const padX = Math.max(28, 64 - minX);
-  const padY = Math.max(28, 64 - minY);
+  const padX = Math.max(40, 80 - minX);
+  const padY = Math.max(40, 80 - minY);
   Object.keys(positions).forEach((key) => {
     positions[key] = {
       x: positions[key].x + padX,
@@ -145,13 +145,9 @@ function computeThompsonPositions(tree, width, height) {
   };
 }
 
-if (typeof cytoscape !== "undefined") {
-  if (typeof cytoscapeDagre !== "undefined") {
-    cytoscape.use(cytoscapeDagre);
-  }
-  if (typeof cytoscapeElk !== "undefined") {
-    cytoscape.use(cytoscapeElk);
-  }
+// Registrasi plugin Dagre untuk tata letak hirarkis
+if (typeof cytoscape !== "undefined" && typeof cytoscapeDagre !== "undefined") {
+  cytoscape.use(cytoscapeDagre);
 }
 
 function drawAutomata(
@@ -169,46 +165,58 @@ function drawAutomata(
 
   if (typeof cytoscape === "undefined") {
     container.innerHTML =
-      '<div class="diagram-placeholder">Cytoscape belum termuat</div>';
+      '<div class="diagram-placeholder">Cytoscape.js gagal termuat.</div>';
     return;
   }
 
   if (automataGraphs[containerId]) {
-    automataGraphs[containerId].destroy();
+    const oldCy = automataGraphs[containerId];
+    const oldRo = oldCy.data("resizeObserver");
+    if (oldRo) {
+      oldRo.disconnect();
+    }
+    oldCy.destroy();
   }
 
   container.innerHTML = "";
   const isNfaView = containerId === "diagram2-container";
   const useThompsonPreset =
-    isNfaView && typeof nfaData !== "undefined" && nfaData.layoutTree;
+    isNfaView && typeof nfaLayoutTree !== "undefined" && nfaLayoutTree;
+  
   const preset = useThompsonPreset
     ? computeThompsonPositions(
-        nfaData.layoutTree,
-        container.clientWidth || 597,
-        container.clientHeight || 298,
+        nfaLayoutTree,
+        container.clientWidth || 600,
+        container.clientHeight || 400,
       )
     : null;
 
   const nodeSet = new Set(states);
   const rootState = states.includes(startState) ? startState : states[0];
 
-  const elements = states.map((s) => ({
-    data: {
-      id: s,
-      label: s,
-      isFinal: finalStates.includes(s),
-      isActive: activeState === s,
-    },
-    classes: [
-      finalStates.includes(s) ? "node-final" : "",
-      activeState === s ? "node-active" : "",
-    ]
-      .filter(Boolean)
-      .join(" "),
-    ...(preset && preset.positions[s] ? { position: preset.positions[s] } : {}),
-  }));
+  const elements = states.map((s) => {
+    const isActive = Array.isArray(activeState) ? activeState.includes(s) : activeState === s;
+    return {
+      data: {
+        id: s,
+        label: s,
+        isFinal: finalStates.includes(s),
+        isActive: isActive,
+      },
+      classes: [
+        finalStates.includes(s) ? "node-final" : "",
+        isActive ? "node-active" : "",
+      ]
+        .filter(Boolean)
+        .join(" "),
+      ...(preset && preset.positions[s] ? { position: preset.positions[s] } : {}),
+    };
+  });
 
-  // Build edge map to keep combined labels per pair.
+  // Cek apakah ada transisi
+  let hasEdges = false;
+
+  // Gabungkan transisi dengan source dan target yang sama
   const edgeMap = {};
   Object.entries(transitions).forEach(([key, dest]) => {
     const [from, sym] = key.split("|||");
@@ -217,9 +225,13 @@ function drawAutomata(
     const dests = Array.isArray(dest) ? dest : [dest];
     dests.forEach((d) => {
       if (!d || !states.includes(d)) return;
+      hasEdges = true;
       const ek = from + "->" + d;
       if (!edgeMap[ek]) edgeMap[ek] = { from, to: d, labels: [] };
-      edgeMap[ek].labels.push(sym === "ε" ? "ε" : sym);
+      const displaySym = sym === "ε" ? "ε" : sym;
+      if (!edgeMap[ek].labels.includes(displaySym)) {
+        edgeMap[ek].labels.push(displaySym);
+      }
     });
   });
 
@@ -227,7 +239,9 @@ function drawAutomata(
     const isActive =
       !!highlightEdge &&
       highlightEdge.from === e.from &&
-      highlightEdge.to === e.to;
+      highlightEdge.to === e.to &&
+      (highlightEdge.symbol ? e.labels.includes(highlightEdge.symbol) : true);
+      
     const edgeId = `${containerId}-e-${i}`;
     elements.push({
       data: {
@@ -253,8 +267,8 @@ function drawAutomata(
       ...(preset
         ? {
             position: {
-              x: (preset.positions[rootState]?.x || 72) - 56,
-              y: preset.positions[rootState]?.y || 0,
+              x: (preset.positions[rootState]?.x || 80) - 50,
+              y: preset.positions[rootState]?.y || 200,
             },
           }
         : {}),
@@ -277,45 +291,68 @@ function drawAutomata(
       {
         selector: "node",
         style: {
-          width: isNfaView ? 40 : 42,
-          height: isNfaView ? 40 : 42,
+          width: 44,
+          height: 44,
           label: "data(label)",
           "background-color": "#ffffff",
-          "border-color": "#c8c5ba",
-          "border-width": 2,
-          color: "#1a1917",
-          "font-family": "IBM Plex Mono",
-          "font-size": 11,
+          "border-color": "#94a3b8",
+          "border-width": 2.5,
+          color: "#0f172a",
+          "font-family": "Plus Jakarta Sans",
+          "font-size": 12,
+          "font-weight": "bold",
           "text-valign": "center",
           "text-halign": "center",
-          "text-wrap": "ellipsis",
-          "text-max-width": 40,
+          "transition-property": "background-color, border-color, color",
+          "transition-duration": "0.12s",
         },
       },
       {
         selector: "node.node-final",
         style: {
-          "background-color": "#eff6ff",
+          width: 46,
+          height: 46,
+          "background-color": "#f8fafc",
           "border-color": "#2563eb",
           "border-style": "double",
           "border-width": 5,
-          color: "#1e40af",
+          color: "#2563eb",
         },
       },
       {
         selector: "node.node-active",
         style: {
-          "background-color": "#f0fdf4",
-          "border-color": "#16a34a",
-          "border-width": 4,
-          color: "#16a34a",
+          "background-color": "#dbeafe",
+          "border-color": "#2563eb",
+          "border-width": 3.5,
+          color: "#1e3a8a",
+        },
+      },
+      {
+        selector: "node.node-hover",
+        style: {
+          "border-color": "#1e40af",
+          "background-color": "#f1f5f9",
+        },
+      },
+      {
+        selector: "node.node-final.node-hover",
+        style: {
+          "border-color": "#1d4ed8",
+        },
+      },
+      {
+        selector: "node.node-active.node-hover",
+        style: {
+          "background-color": "#bfdbfe",
+          "border-color": "#1d4ed8",
         },
       },
       {
         selector: "node.start-marker",
         style: {
-          width: 2,
-          height: 2,
+          width: 1,
+          height: 1,
           label: "",
           "background-opacity": 0,
           "border-width": 0,
@@ -325,20 +362,23 @@ function drawAutomata(
       {
         selector: "edge",
         style: {
-          width: 1.6,
-          "line-color": "#c8c5ba",
-          "target-arrow-color": "#9b9890",
+          width: 2.0,
+          "line-color": "#64748b",
+          "target-arrow-color": "#64748b",
           "target-arrow-shape": "triangle",
-          "curve-style": isNfaView ? "unbundled-bezier" : "bezier",
+          "arrow-scale": 0.9,
+          "curve-style": "bezier",
           label: "data(label)",
-          color: "#6b6860",
-          "font-family": "IBM Plex Mono",
-          "font-size": 10,
+          color: "#475569",
+          "font-family": "Plus Jakarta Sans",
+          "font-size": 11,
           "text-background-opacity": 1,
-          "text-background-color": "#f0efe9",
-          "text-background-padding": 2,
-          "text-margin-y": -8,
+          "text-background-color": "#ffffff",
+          "text-background-padding": 3,
+          "text-margin-y": -7,
           "text-rotation": "autorotate",
+          "transition-property": "line-color, target-arrow-color, width",
+          "transition-duration": "0.12s",
         },
       },
       {
@@ -346,23 +386,40 @@ function drawAutomata(
         style: {
           "loop-direction": "-45deg",
           "loop-sweep": "70deg",
+          "control-point-step-size": 42,
+        },
+      },
+      {
+        selector: "edge.edge-backward",
+        style: {
+          "curve-style": "unbundled-bezier",
+          "control-point-distances": (edge) => {
+            const source = edge.source();
+            const target = edge.target();
+            const sPos = source.position();
+            const tPos = target.position();
+            if (!sPos || !tPos) return 65;
+            const dx = Math.abs(sPos.x - tPos.x);
+            return 55 + (dx * 0.12);
+          },
+          "control-point-weights": 0.5,
         },
       },
       {
         selector: "edge.edge-active",
         style: {
-          "line-color": "#16a34a",
-          "target-arrow-color": "#16a34a",
-          color: "#16a34a",
-          width: 2.2,
+          "line-color": "#2563eb",
+          "target-arrow-color": "#2563eb",
+          color: "#2563eb",
+          width: 3.0,
         },
       },
       {
         selector: "edge.start-edge",
         style: {
-          "line-color": "#16a34a",
-          "target-arrow-color": "#16a34a",
-          width: 2,
+          "line-color": "#2563eb",
+          "target-arrow-color": "#2563eb",
+          width: 2.0,
           label: "",
           "curve-style": "straight",
           "source-endpoint": "outside-to-node",
@@ -373,98 +430,123 @@ function drawAutomata(
     userPanningEnabled: true,
     userZoomingEnabled: true,
     boxSelectionEnabled: false,
-    autoungrabify: true,
-    layout: preset
-      ? { name: "preset", fit: true, padding: 20, animate: false }
-      : undefined,
+    autoungrabify: false,
   });
 
-  const useElk =
-    !preset && states.length >= 18 && typeof cytoscapeElk !== "undefined";
-  const useDagre = !useElk && typeof cytoscapeDagre !== "undefined";
-
-  const layout = preset
-    ? null
-    : useElk
-      ? cy.layout({
-          name: "elk",
+  // Tentukan tata letak diagram secara dinamis
+  let layoutOptions;
+  if (preset) {
+    // Gunakan posisi koordinat preset untuk NFA Thompson
+    layoutOptions = { name: "preset", fit: true, padding: 35, animate: false };
+  } else if (!hasEdges) {
+    // Jika tidak ada transisi, atur dalam satu baris horizontal lurus
+    layoutOptions = { name: "grid", rows: 1, fit: true, padding: 35, animate: false };
+  } else {
+    // DFA menggunakan tata letak hierarkis Dagre (kiri ke kanan)
+    const useDagre = typeof cytoscapeDagre !== "undefined";
+    layoutOptions = useDagre
+      ? {
+          name: "dagre",
+          rankDir: "LR",
+          padding: 40,
+          nodeSep: 65,
+          edgeSep: 45,
+          rankSep: 85,
+          nodeDimensionsIncludeLabels: true,
           fit: true,
-          padding: 26,
-          elk: {
-            algorithm: "layered",
-            "elk.direction": "RIGHT",
-            "elk.spacing.nodeNode": "28",
-            "elk.layered.spacing.nodeNodeBetweenLayers": "40",
-            "elk.edgeRouting": "SPLINES",
-          },
-        })
-      : useDagre
-        ? cy.layout({
-            name: "dagre",
-            rankDir: "LR",
-            padding: isNfaView ? 30 : 24,
-            nodeSep: isNfaView ? 42 : 36,
-            edgeSep: isNfaView ? 26 : 20,
-            rankSep: isNfaView ? 66 : 52,
-            ranker: isNfaView ? "network-simplex" : "tight-tree",
-            align: isNfaView ? "UL" : undefined,
-            nodeDimensionsIncludeLabels: true,
-            fit: true,
-            animate: false,
-          })
-        : cy.layout({
-            name: "breadthfirst",
-            directed: true,
-            roots: rootState ? `#${rootState}` : undefined,
-            padding: 24,
-            spacingFactor: 1.15,
-            fit: true,
-            animate: false,
-          });
+          animate: false,
+        }
+      : {
+          name: "breadthfirst",
+          directed: true,
+          roots: rootState ? `#${rootState}` : undefined,
+          padding: 35,
+          fit: true,
+          animate: false,
+        };
+  }
 
-  if (layout) layout.run();
+  const layout = cy.layout(layoutOptions);
+  layout.run();
 
-  if (isNfaView && !preset) {
+  // Deteksi dan tag transisi arah mundur agar melengkung ke atas/bawah
+  cy.ready(() => {
     cy.edges().forEach((edge) => {
       const source = edge.source();
       const target = edge.target();
-      if (!source.length || !target.length) return;
-      if (source.id() === target.id()) {
-        edge.style({
-          "loop-direction": "-70deg",
-          "loop-sweep": "75deg",
-        });
-      } else if (edge.data("label").includes(",")) {
-        edge.style({
-          "control-point-distances": 44,
-          "control-point-weights": 0.5,
-        });
-      } else {
-        edge.style({
-          "control-point-distances": 30,
-          "control-point-weights": 0.5,
-        });
+      if (source.length && target.length && !edge.hasClass("start-edge")) {
+        const sPos = source.position();
+        const tPos = target.position();
+        if (sPos && tPos && sPos.x > tPos.x) {
+          edge.addClass("edge-backward");
+        }
       }
     });
-  }
-
-  if (rootState) {
-    const root = cy.getElementById(rootState);
-    const marker = cy.getElementById(`${containerId}-start-marker`);
-    if (root.length && marker.length) {
-      const p =
-        preset && preset.positions[rootState]
-          ? preset.positions[rootState]
-          : root.position();
-      marker.position({ x: p.x - 52, y: p.y });
+    
+    // Posisikan panah start-marker menunjuk ke start state
+    if (rootState) {
+      const root = cy.getElementById(rootState);
+      const marker = cy.getElementById(`${containerId}-start-marker`);
+      if (root.length && marker.length) {
+        setTimeout(() => {
+          const p = root.position();
+          marker.position({ x: p.x - 50, y: p.y });
+          cy.fit(cy.nodes().filter(n => !n.hasClass('start-marker')), 35);
+        }, 50);
+      }
     }
-  }
+    // Event handler kursor saat interaksi drag dan hover node
+    cy.on('mouseover', 'node', (evt) => {
+      if (!evt.target.hasClass('start-marker')) {
+        container.style.cursor = 'grab';
+        evt.target.addClass('node-hover');
+      }
+    });
+    cy.on('mouseout', 'node', (evt) => {
+      container.style.cursor = 'grab';
+      evt.target.removeClass('node-hover');
+    });
+    cy.on('grab', 'node', (evt) => {
+      container.style.cursor = 'grabbing';
+      evt.target.removeClass('node-hover');
+    });
+    cy.on('free', 'node', () => {
+      container.style.cursor = 'grab';
+    });
+  });
 
   cy.resize();
-  cy.fit(
-    cy.nodes().filter((n) => !n.hasClass("start-marker")),
-    24,
-  );
-
+  
+  if (window.ResizeObserver) {
+    const ro = new ResizeObserver(() => {
+      cy.resize();
+      const validNodes = cy.nodes().filter(n => !n.hasClass('start-marker'));
+      if (validNodes.length > 0) {
+        cy.fit(validNodes, 35);
+        cy.center(validNodes);
+      }
+    });
+    ro.observe(container);
+    cy.data('resizeObserver', ro);
+  }
+  
   automataGraphs[containerId] = cy;
+}
+
+// Kontrol Diagram (Zoom dan Penyesuaian Fit)
+function zoomGraph(containerId, factor) {
+  const cy = automataGraphs[containerId];
+  if (cy) {
+    cy.zoom(cy.zoom() * factor);
+    cy.center(cy.nodes().filter(n => !n.hasClass('start-marker')));
+  }
+}
+
+function fitGraph(containerId) {
+  const cy = automataGraphs[containerId];
+  if (cy) {
+    const validNodes = cy.nodes().filter(n => !n.hasClass('start-marker'));
+    cy.fit(validNodes, 35);
+    cy.center(validNodes);
+  }
 }

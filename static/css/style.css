@@ -1,0 +1,783 @@
+/* SISTEM DESAIN - TEMA TERANG MINIMALIS */
+
+   :root {
+    --bg-dark: #f8fafc;
+    --bg-app: #f1f5f9;
+    --surface-glass: #ffffff;
+    --surface-glass-active: #f8fafc;
+    --border-glass: #cbd5e1;
+    --border-glass-strong: #2563eb;
+    
+    /* Aksen Warna */
+    --indigo: #2563eb;
+    --indigo-glow: rgba(37, 99, 235, 0.08);
+    --indigo-glow-strong: rgba(37, 99, 235, 0.2);
+    
+    --emerald: #059669;
+    --emerald-glow: rgba(5, 150, 105, 0.08);
+    
+    --rose: #dc2626;
+    --rose-glow: rgba(220, 38, 38, 0.08);
+    
+    --amber: #d97706;
+    --amber-glow: rgba(217, 119, 6, 0.08);
+    
+    --success: var(--emerald);
+    
+    /* Tipografi & Teks */
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #64748b;
+    
+    --font-sans: 'Plus Jakarta Sans', sans-serif;
+    --font-mono: 'Plus Jakarta Sans', sans-serif;
+    
+    --radius-lg: 12px;
+    --radius-md: 8px;
+    --radius-sm: 6px;
+    
+    --transition-smooth: all 0.15s ease-out;
+  }
+  
+  /* Reset & Gaya Dasar */
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+  
+  body {
+    font-family: var(--font-sans);
+    background-color: var(--bg-dark);
+    color: var(--text-primary);
+    min-height: 100vh;
+    font-size: 14px;
+    overflow-x: hidden;
+    position: relative;
+    line-height: 1.5;
+  }
+  
+  /* Latar Belakang Gradien */
+  .glow-bg {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: -1;
+    background: 
+      radial-gradient(circle at 10% 20%, rgba(37, 99, 235, 0.04) 0%, transparent 40%),
+      radial-gradient(circle at 90% 80%, rgba(5, 150, 105, 0.03) 0%, transparent 40%),
+      radial-gradient(circle at 50% 50%, #f1f5f9 0%, var(--bg-dark) 100%);
+  }
+  
+  /* Kontainer Utama */
+  .app {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    position: relative;
+    z-index: 1;
+  }
+  
+  /* Header */
+  .header {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 36px;
+    border-bottom: 1px solid var(--border-glass);
+    padding-bottom: 24px;
+  }
+  
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 0px;
+  }
+  
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+  }
+  
+  .header-subtitle {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+  }
+  
+  /* Navigasi Tab */
+  .tabs-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 32px;
+  }
+  
+  .tabs {
+    display: flex;
+    gap: 4px;
+    background: #e2e8f0;
+    padding: 6px;
+    border-radius: 14px;
+    border: 1px solid var(--border-glass);
+    width: fit-content;
+  }
+  
+  .tab {
+    padding: 10px 24px;
+    font-size: 13px;
+    font-family: var(--font-sans);
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    transition: var(--transition-smooth);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    white-space: nowrap;
+  }
+  
+  .tab:hover {
+    color: var(--text-primary);
+    background: rgba(15, 23, 42, 0.04);
+  }
+  
+  .tab.active {
+    background: var(--indigo);
+    color: #ffffff;
+    box-shadow: 0 4px 12px var(--indigo-glow-strong);
+  }
+  
+  .tab-num {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    opacity: 0.8;
+    background: rgba(15, 23, 42, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+  }
+  
+  /* Panel Konten */
+  .panel {
+    display: none;
+    animation: fadeIn 0.4s ease-out;
+  }
+  
+  .panel.active {
+    display: block;
+  }
+  
+  /* Tata Letak Grid */
+  .grid-layout {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    gap: 24px;
+    align-items: start;
+  }
+  
+  .grid-layout-equiv {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+  }
+  
+  .equiv-inputs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  
+  .double-diagram-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  
+  .side-controls {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .diagram-area {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  /* Kartu Kontainer */
+  .card {
+    background: var(--surface-glass);
+    border: 1px solid var(--border-glass);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: 0 4px 20px -2px rgba(15, 23, 42, 0.05), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+    transition: border-color 0.15s ease;
+  }
+  
+  .card:hover {
+    border-color: rgba(99, 102, 241, 0.15);
+  }
+  
+  .card.tall-card {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    height: 480px;
+  }
+  
+  .card-title {
+    font-family: var(--font-sans);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-left: 3px solid var(--indigo);
+    padding-left: 10px;
+  }
+  
+  /* Elemen Formulir */
+  .form-group {
+    margin-bottom: 16px;
+  }
+  
+  label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .label-desc {
+    text-transform: none;
+    color: var(--text-muted);
+    font-weight: 400;
+    font-size: 10px;
+    letter-spacing: 0;
+  }
+  
+  input[type="text"],
+  input:not([type]) {
+    width: 100%;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    font-family: var(--font-mono);
+    font-size: 13px;
+    padding: 11px 14px;
+    outline: none;
+    transition: var(--transition-smooth);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.05);
+  }
+  
+  input[type="text"]:focus,
+  input:not([type]):focus {
+    border-color: var(--indigo);
+    box-shadow: 
+      inset 0 1px 2px rgba(0, 0, 0, 0.05),
+      0 0 0 3px rgba(37, 99, 235, 0.15);
+    background: #ffffff;
+  }
+  
+  /* Tombol */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: var(--radius-md);
+    border: 1px solid transparent;
+    font-family: var(--font-sans);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+  
+  .btn-primary {
+    background: var(--indigo);
+    color: #ffffff;
+    box-shadow: 0 4px 14px var(--indigo-glow);
+  }
+  
+  .btn-primary:hover {
+    background: #4f46e5;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px var(--indigo-glow-strong);
+  }
+  
+  .btn-accent {
+    background: var(--emerald);
+    color: #ffffff;
+    box-shadow: 0 4px 14px var(--emerald-glow);
+  }
+  
+  .btn-accent:hover {
+    background: #059669;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 18px rgba(16, 185, 129, 0.35);
+  }
+  
+  .btn-ghost {
+    background: transparent;
+    border-color: var(--border-glass);
+    color: var(--text-secondary);
+  }
+  
+  .btn-ghost:hover {
+    border-color: var(--border-glass-strong);
+    color: var(--text-primary);
+    background: rgba(15, 23, 42, 0.04);
+  }
+  
+  .btn-lg {
+    padding: 14px 28px;
+    font-size: 14px;
+    border-radius: 12px;
+  }
+  
+  .btn-sm {
+    padding: 6px 12px;
+    font-size: 10px;
+    border-radius: var(--radius-sm);
+  }
+  
+  .btn-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    flex-wrap: wrap;
+  }
+  
+  .equiv-action {
+    display: flex;
+    justify-content: center;
+    margin: 8px 0;
+  }
+  
+  /* Wadah Diagram Visualisasi */
+  .diagram-wrapper {
+    position: relative;
+    width: 100%;
+    flex-grow: 1;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .diagram-wrap {
+    width: 100%;
+    height: 100%;
+    flex-grow: 1;
+    min-height: 300px;
+    cursor: grab;
+  }
+  
+  .diagram-wrap:active {
+    cursor: grabbing;
+  }
+  
+  .diagram-wrap.small-diagram {
+    min-height: 280px;
+  }
+  
+  .diagram-placeholder {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 24px;
+    text-align: center;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+  }
+  
+  /* Kontrol Diagram Melayang */
+  .diagram-controls {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    display: flex;
+    gap: 6px;
+    z-index: 10;
+  }
+  
+  .control-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: #ffffff;
+    border: 1px solid var(--border-glass);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--transition-smooth);
+  }
+  
+  .control-btn:hover {
+    color: var(--indigo);
+    border-color: var(--indigo);
+    background: #f1f5f9;
+  }
+  
+  .diagram-legend {
+    display: flex;
+    gap: 16px;
+    margin-top: 14px;
+    font-size: 11px;
+    color: var(--text-secondary);
+    font-family: var(--font-mono);
+    flex-wrap: wrap;
+  }
+  
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .legend-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  
+  /* Desain Tabel */
+  .table-scroll {
+    overflow-x: auto;
+    margin-top: 4px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-glass);
+  }
+  
+  .table-scroll-mini {
+    overflow-x: auto;
+    margin-top: 12px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-glass);
+    max-height: 240px;
+  }
+  
+  .trans-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    font-family: var(--font-mono);
+  }
+  
+  .trans-table th {
+    background: #f1f5f9;
+    color: var(--text-primary);
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    font-weight: 600;
+    text-align: center;
+  }
+  
+  .trans-table td {
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    text-align: center;
+    background: #ffffff;
+  }
+  
+  .trans-table tr:hover td {
+    background: #f8fafc;
+  }
+  
+  .trans-table td input[type="text"] {
+    width: 55px;
+    padding: 4px 6px;
+    font-size: 12px;
+    text-align: center;
+    border-radius: 4px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: var(--text-primary);
+  }
+  
+  /* Kotak Hasil */
+  .result-box {
+    margin-top: 16px;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    font-size: 13px;
+    font-family: var(--font-mono);
+    border: 1px solid transparent;
+    line-height: 1.6;
+    animation: slideUp 0.3s ease;
+  }
+  
+  .r-accept {
+    background: rgba(5, 150, 105, 0.08);
+    border-color: rgba(5, 150, 105, 0.2);
+    color: #047857;
+  }
+  
+  .r-reject {
+    background: rgba(220, 38, 38, 0.08);
+    border-color: rgba(220, 38, 38, 0.25);
+    color: #b91c1c;
+  }
+  
+  .r-info {
+    background: rgba(37, 99, 235, 0.08);
+    border-color: rgba(37, 99, 235, 0.2);
+    color: #1d4ed8;
+  }
+  
+  .r-warn {
+    background: rgba(217, 119, 6, 0.08);
+    border-color: rgba(217, 119, 6, 0.2);
+    color: #b45309;
+  }
+  
+  /* Penelusuran Langkah */
+  .step-trace {
+    margin-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    max-height: 240px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+  
+  .step {
+    padding: 8px 12px;
+    border-radius: var(--radius-sm);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--border-glass);
+    transition: var(--transition-smooth);
+    cursor: pointer;
+  }
+  
+  .step:hover {
+    border-color: var(--indigo);
+    background: rgba(15, 23, 42, 0.03);
+  }
+  
+  .step-info {
+    background: rgba(37, 99, 235, 0.05);
+    color: #1d4ed8;
+    border-color: rgba(37, 99, 235, 0.15);
+  }
+  
+  .step-ok {
+    background: rgba(5, 150, 105, 0.05);
+    color: #059669;
+    border-color: rgba(5, 150, 105, 0.15);
+  }
+  
+  .step-fail {
+    background: rgba(220, 38, 38, 0.05);
+    color: #dc2626;
+    border-color: rgba(220, 38, 38, 0.15);
+  }
+  
+  /* Lencana dan Label */
+  .badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 10px;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    border: 1px solid transparent;
+  }
+  
+  .badge-dfa {
+    background: rgba(37, 99, 235, 0.08);
+    border-color: rgba(37, 99, 235, 0.2);
+    color: #1d4ed8;
+  }
+  
+  .badge-nfa {
+    background: rgba(217, 119, 6, 0.08);
+    border-color: rgba(217, 119, 6, 0.2);
+    color: #b45309;
+  }
+  
+  /* Kustomisasi Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-glass-strong);
+    border-radius: 3px;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--indigo);
+  }
+  
+  /* Tabel Scroll NFA */
+  .nfa-scroll {
+    overflow-x: auto;
+    max-height: 250px;
+    overflow-y: auto;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-glass);
+  }
+  
+  .table-placeholder {
+    padding: 16px;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-align: center;
+    font-family: var(--font-mono);
+  }
+  
+  /* Blok Informasi Metadata */
+  .meta-info p {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+  }
+  
+  .regex-tips {
+    background: #f8fafc;
+    border: 1px solid #cbd5e1;
+    border-radius: var(--radius-md);
+    padding: 12px;
+    margin-top: 14px;
+  }
+  
+  .tips-title {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .regex-tips ul {
+    list-style-type: none;
+    font-size: 11px;
+    color: var(--text-secondary);
+  }
+  
+  .regex-tips li {
+    margin-bottom: 4px;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+  
+  .regex-tips code {
+    background: rgba(0, 0, 0, 0.05);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--indigo);
+    font-family: var(--font-mono);
+    font-weight: 600;
+  }
+  
+  /* Output Simbol Ekuivalensi */
+  .equiv-big {
+    text-align: center;
+    font-size: 48px;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    padding: 8px;
+    line-height: 1;
+  }
+  
+  .diagram-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .cell-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  
+  /* Animasi */
+  @keyframes pulseOrb {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 0.8;
+      box-shadow: 0 0 16px var(--indigo-glow-strong);
+    }
+    50% {
+      transform: scale(1.15);
+      opacity: 1;
+      box-shadow: 0 0 24px rgba(16, 185, 129, 0.7);
+    }
+  }
+  
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .fade-in {
+    animation: fadeIn 0.4s ease-out;
+  }
+  
+  /* Tata Letak Responsif */
+  @media (max-width: 960px) {
+    .grid-layout {
+      grid-template-columns: 1fr;
+    }
+    .equiv-inputs,
+    .double-diagram-grid {
+      grid-template-columns: 1fr;
+    }
+    .tabs {
+      max-width: 100%;
+      overflow-x: auto;
+    }
+    .app {
+      padding: 24px 16px;
+    }
+  }
